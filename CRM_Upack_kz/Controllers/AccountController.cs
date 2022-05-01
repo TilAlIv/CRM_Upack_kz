@@ -89,9 +89,9 @@ namespace CRM_Upack_kz.Controllers
         
         
         [HttpGet]
-        public IActionResult Login(string returnUrl = null)
+        public IActionResult Login()
         {
-            return View(new LoginViewModel { ReturnUrl = returnUrl });
+            return View();
         }
         
         [HttpPost]
@@ -106,11 +106,6 @@ namespace CRM_Upack_kz.Controllers
                     var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, false);
                     if (result.Succeeded)
                     {
-                        if (!string.IsNullOrEmpty(model.ReturnUrl) && Url.IsLocalUrl(model.ReturnUrl))
-                        {
-                            return Redirect(model.ReturnUrl);
-                        }
-    
                         return RedirectToAction("Index", "Home");
                     }
                 }
@@ -125,7 +120,7 @@ namespace CRM_Upack_kz.Controllers
         public async Task<IActionResult> LogOff()
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("Login");
         }
 
 
