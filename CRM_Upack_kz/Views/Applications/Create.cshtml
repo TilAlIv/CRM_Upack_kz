@@ -1,0 +1,80 @@
+﻿@model CRM_Upack_kz.ViewModels.ApplViewModel
+
+@{
+    Layout = "_Layout";
+}
+
+
+
+<div class="col-md-4 pt-3 pb-4 ">
+    <h4>Заполните поля</h4>
+    <form asp-action="Create" asp-controller="Applications" method="post" enctype="multipart/form-data">
+        <div class="text-danger" asp-validation-summary="ModelOnly"></div>
+        <div class="form-group mb-3">
+            <label asp-for="CodeClient"></label>
+            <input id="codeClient" class="form-control" onchange="GetInfoClientAjax()" asp-for="CodeClient">
+            <small><span asp-validation-for="CodeClient" class="text-danger"></span></small>
+        </div>
+        <div class="form-group mb-3">
+            <label asp-for="NameClient"></label>
+            <input id="nameClient" class="form-control" asp-for="NameClient">
+            <small><span asp-validation-for="NameClient" class="text-danger"></span></small>
+        </div>
+        <div class="form-group mb-3">
+            <label asp-for="ArticleNumber"></label>
+            <input class="form-control" asp-for="ArticleNumber">
+            <small><span asp-validation-for="ArticleNumber" class="text-danger"></span></small>
+        </div>
+        <div class="form-group mb-3">
+            <label asp-for="Quantity"></label>
+            <input class="form-control" asp-for="Quantity">
+            <small><span asp-validation-for="Quantity" class="text-danger"></span></small>
+        </div>
+        <div class="form-group mb-3">
+            <label asp-for="Price"></label>
+            <input class="form-control" asp-for="Price">
+            <small><span asp-validation-for="Price" class="text-danger"></span></small>
+        </div>
+        <div class="form-group mb-2">
+            <label asp-for="Comment"></label>
+            <textarea class="form-control" asp-for="Comment"></textarea>
+            <small><span asp-validation-for="Comment" class="text-danger"></span></small>
+        </div>
+        <div>
+            <input type="submit" id="create" class="btn btn-outline-primary" value="Создать">
+        </div>
+    </form>
+</div>
+<div class="col-md-4 pt-3 pb-4 ">
+    
+</div>
+
+
+@section Scripts
+{
+  <script >
+    $(document).ready(function () {
+        $('#caption').text("Добавьте новое обращение");
+        
+        
+    });
+    
+    function GetInfoClientAjax(){
+        var codeClient = $('#codeClient').val();
+                
+        $.ajax({
+            url : '@Url.Action("GetInfoClientAjax", "Applications")',
+            type : 'GET',
+            data : {
+                'codeClient' : codeClient
+            },
+            success : function (data){
+                $('#nameClient').val(data);
+                console.log(data)
+            }
+        });
+    }
+ </script>
+}
+
+

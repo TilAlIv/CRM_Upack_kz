@@ -27,10 +27,10 @@ namespace CRM_Upack_kz
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddControllersWithViews();
             string connection = Configuration.GetConnectionString("DefaultConnection");
-
             services
-                .AddDbContext<UpackContext>(options => options.UseNpgsql(connection))
+                .AddDbContext<UpackContext>(options => options.UseLazyLoadingProxies().UseNpgsql(connection))
                 .AddIdentity<User, IdentityRole>(options =>
                 {
                     options.Password.RequiredLength = 5;
@@ -39,9 +39,9 @@ namespace CRM_Upack_kz
                     options.Password.RequireUppercase = false; 
                     options.Password.RequireDigit = false; 
                 })
-                .AddEntityFrameworkStores<UpackContext>();
+                .AddEntityFrameworkStores<UpackContext>().AddDefaultTokenProviders();
                 
-            services.AddControllersWithViews();
+            
             services.AddTransient<FileUploadService>();
         }
 
@@ -70,7 +70,7 @@ namespace CRM_Upack_kz
             {
                 endpoints.MapControllerRoute(
                     name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
+                    pattern: "{controller=Applications}/{action=Index}/{id?}");
             });
             
         }

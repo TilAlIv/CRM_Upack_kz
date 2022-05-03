@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using CRM_Upack_kz.Models;
 using CRM_Upack_kz.ViewModel;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Hosting;
@@ -11,6 +12,7 @@ using WebStudio.Services;
 
 namespace CRM_Upack_kz.Controllers
 {
+    
     public class AccountController : Controller
     {
         private UpackContext _db;
@@ -34,14 +36,14 @@ namespace CRM_Upack_kz.Controllers
             _iLogger = iLogger;
         }
 
-        
+        [Authorize]
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
         
-        
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
@@ -73,7 +75,7 @@ namespace CRM_Upack_kz.Controllers
                 {
                     await _userManager.AddToRoleAsync(user, "user");
                     await _signInManager.SignInAsync(user, false);
-                    return RedirectToAction("Index", "Home");
+                    return RedirectToAction("Index", "Applications");
                 }
                 
                 foreach (var error in result.Errors)
@@ -106,7 +108,7 @@ namespace CRM_Upack_kz.Controllers
                     var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, false);
                     if (result.Succeeded)
                     {
-                        return RedirectToAction("Index", "Home");
+                        return RedirectToAction("Index", "Applications");
                     }
                 }
                 
