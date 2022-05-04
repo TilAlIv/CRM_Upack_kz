@@ -1,0 +1,65 @@
+﻿@model Application
+
+@{
+    ViewBag.Title = "Удаление обращения";
+    Layout = "_Layout";
+}
+
+<div class="text-center col-sm-3 col-md-3 col-lg-12">
+    <form method="post" asp-action="Delete" asp-controller="Applications" asp-route-id="@Model.Id">
+        <div class="text-center col-sm-3 col-md-3 col-lg-12">
+            <table class="table table-hover">
+                <thead class="table-secondary">
+                    <tr>
+                      <th scope="col" class="font">Менеджер</th>
+                      <th scope="col" class="font">Дата создания</th>
+                      <th scope="col" class="font">Ожидается</th>
+                      <th scope="col" class="font">Код клиента</th>
+                      <th scope="col" class="font">Клиент</th>
+                      <th scope="col" class="font">Артикул</th>
+                      <th scope="col" class="font">Кол-во</th>
+                      <th scope="col" class="font">Цена</th>
+                      <th scope="col" class="font">Сумма</th>
+                      <th scope="col" class="font">Комментарий</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="font text-dark">@Model.Manager.Surname @Model.Manager.Name</td>
+                        <td class="font text-dark">@Model.CreateDate.ToShortDateString()</td>
+                        <td class="font text-danger">
+                            @if (Model.WaitingDate != new DateTime(0001, 01, 01))
+                            {
+                                @Model.WaitingDate.ToShortDateString()
+                            }
+                            else
+                            {
+                                @:Дата не указана
+                            }
+                        </td>
+                        <td class="font text-dark">@Model.Client.CodeClient</td>
+                        <td class="font text-dark">@Model.Client.Title</td>
+                        <td class="font text-dark">@Model.ArticleNumber</td>
+                        <td class="font text-dark">@Model.Quantity</td>
+                        <td class="font text-dark">@Model.Price</td>
+                        <td class="font text-dark">@Model.Amount</td>
+                        <td class="font text-dark">@Model.Comment</td>
+                    </tr>
+                </tbody>
+              </table>
+            </div>
+        <input class="btn btn-danger"  type="submit" value="Да">
+        <a class="btn btn-success" asp-action="Index" asp-controller="Applications">Нет</a>
+    </form>
+</div>
+
+@section Scripts
+{
+    <script >
+    $(document).ready(function () {
+        $('#caption').text("Удаление обращения");
+    });
+    
+  
+ </script>
+}

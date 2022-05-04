@@ -1,29 +1,27 @@
-﻿@using CRM_Upack_kz.ViewModels
-@model CRM_Upack_kz.ViewModels.ApplViewModel
+﻿@model CRM_Upack_kz.ViewModels.ApplViewModel
 
 @{
     Layout = "_Layout";
 }
 
+
 <div class="col-md-4 pt-3 pb-4 ">
     <h4>Заполните поля</h4>
-    <form asp-action="Create" asp-controller="Applications" method="post" enctype="multipart/form-data">
+    <form asp-action="Edit" asp-controller="Applications" method="post" asp-route-applId="@ViewBag.ApplId" enctype="multipart/form-data">
         @{
-            Html.RenderPartial("PartialViews/ApplicationFormPartial", new ApplViewModel());
+            Html.RenderPartial("PartialViews/ApplicationFormPartial");
         }
         <div>
-            <input type="submit" id="edit" class="btn btn-outline-primary shadow-sm" value="Создать">
+            <input type="submit" id="edit" class="btn btn-outline-primary shadow-sm" value="Изменить">
         </div>
     </form>
 </div>
 
-
-
 @section Scripts
 {
-  <script >
+    <script >
     $(document).ready(function () {
-        $('#caption').text("Добавьте новое обращение");
+        $('#caption').text("Измените обращение");
     });
     
     function GetInfoClientAjax(){
@@ -48,5 +46,3 @@
     }
  </script>
 }
-
-

@@ -27,7 +27,6 @@ namespace CRM_Upack_kz.ViewModels
         
         [Required(ErrorMessage = "Это поле обязательно")]
         [Display(Name = "Количество")]
-        
         public int Quantity { get; set; }
         
         [Required(ErrorMessage = "Это поле обязательно")]

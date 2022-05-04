@@ -14,6 +14,7 @@ using NLog;
 using WebStudio.Services;
 using X.PagedList;
 
+
 namespace CRM_Upack_kz.Controllers
 {
     [Authorize]
@@ -40,11 +41,13 @@ namespace CRM_Upack_kz.Controllers
         }
         
         [HttpGet]
-        public IActionResult Index()
+        public IActionResult Index(int? page, int count)
         {
             try
             {
-                return View(_db.Applications.ToList());
+                int pageSize = 13;
+                int pageNumber = (page ?? 1);
+                return View(_db.Applications.ToPagedList(pageNumber, pageSize));
             }
             catch (Exception e)
             {
@@ -93,8 +96,129 @@ namespace CRM_Upack_kz.Controllers
             }
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ConfirmDelete(string id)
+        {
+            if (id != null)
+            {
+                Application appl = await _db.Applications.FirstOrDefaultAsync(a => a.Id == id);
+                if (appl != null)
+                {
+                    return View(appl);
+                }
+                return Content("Данное обращение не найденно");
+            }
+            return Content("Неверный Id");
+        }
 
+
+        [HttpGet]
+        public IActionResult Edit(string id)
+        {
+            if (id != null)
+            {
+                Application appl = _db.Applications.FirstOrDefault(a => a.Id == id);
+                if (appl != null)
+                {
+                    ApplViewModel model = new ApplViewModel()
+                    {
+                        CodeClient = appl.Client.CodeClient,
+                        NameClient = appl.Client.Title,
+                        ArticleNumber = appl.ArticleNumber,
+                        Quantity = (int)appl.Quantity,
+                        Price = appl.Price,
+                        Comment = appl.Comment
+                    };
+                    ViewBag.ApplId = appl.Id;
+                    return View(model);
+                }
+                return Content("Не найдено обращение");
+            }
+
+            return Content("Неверный Id");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(ApplViewModel model, string applId)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    Application appl = _db.Applications.FirstOrDefault(ap => ap.Id == applId);
+                    if (appl != null)
+                    {
+                        Client client = _db.Clients.FirstOrDefault(c => c.Id == model.CodeClient);
+                        if (client != null)
+                        {
+                            appl.Client = client;
+                            appl.ClientId = client.Id;
+                            appl.ArticleNumber = model.ArticleNumber.ToUpper();
+                            appl.Comment = model.Comment;
+                            appl.Price = model.Price;
+                            appl.Quantity = model.Quantity;
+                            appl.Amount = model.Price * model.Quantity;
+
+                            _db.Applications.Update(appl);
+                            await _db.SaveChangesAsync();
+                            
+                            return RedirectToAction("Index");
+                        }
+                        
+                        Client newClient = new Client() {CodeClient = model.CodeClient.ToUpper(), Title = model.NameClient};
+
+                        _db.Clients.Add(newClient);
+                        await _db.SaveChangesAsync();
+                        
+                        appl.Client = newClient;
+                        appl.ClientId = newClient.Id;
+                        appl.ArticleNumber = model.ArticleNumber.ToUpper();
+                        appl.Comment = model.Comment;
+                        appl.Price = model.Price;
+                        appl.Quantity = model.Quantity;
+                        appl.Amount = model.Price * model.Quantity;
+
+                        _db.Applications.Update(appl);
+                        await _db.SaveChangesAsync();
+
+                        return RedirectToAction("Index");
+                    }
+
+                    return Content("Обращение не найдено");
+
+                }
+
+                ViewBag.ApplId = applId;
+                return View(model);
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.TargetSite}: {e.Message} | {e.StackTrace}");
+                return Content($"Внимание ошибка: {e.TargetSite}: {e.Message} | {e.StackTrace}");
+            }
+        }
         
+        
+        
+        
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(string id)
+        {
+            if (id != null)
+            {
+                Application appl = await _db.Applications.FirstOrDefaultAsync(a => a.Id == id);
+                if (appl != null)
+                {
+                    _db.Entry(appl).State = EntityState.Deleted;
+                    await _db.SaveChangesAsync();
+                    return RedirectToAction("Index");
+                }
+                return Content("Данное обращение не найденно");
+            }
+            return Content("Неверный Id");
+        }
+
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetInfoClientAjax(string codeClient)
