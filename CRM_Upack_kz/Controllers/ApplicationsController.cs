@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using CRM_Upack_kz.Enums;
 using CRM_Upack_kz.Models;
 using CRM_Upack_kz.ViewModel;
 using CRM_Upack_kz.ViewModels;
@@ -97,22 +98,6 @@ namespace CRM_Upack_kz.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> ConfirmDelete(string id)
-        {
-            if (id != null)
-            {
-                Application appl = await _db.Applications.FirstOrDefaultAsync(a => a.Id == id);
-                if (appl != null)
-                {
-                    return View(appl);
-                }
-                return Content("Данное обращение не найденно");
-            }
-            return Content("Неверный Id");
-        }
-
-
-        [HttpGet]
         public IActionResult Edit(string id)
         {
             if (id != null)
@@ -148,39 +133,18 @@ namespace CRM_Upack_kz.Controllers
                     Application appl = _db.Applications.FirstOrDefault(ap => ap.Id == applId);
                     if (appl != null)
                     {
-                        Client client = _db.Clients.FirstOrDefault(c => c.Id == model.CodeClient);
+                        Client client = await _db.Clients.FirstOrDefaultAsync(c => c.CodeClient == model.CodeClient);
                         if (client != null)
                         {
-                            appl.Client = client;
-                            appl.ClientId = client.Id;
-                            appl.ArticleNumber = model.ArticleNumber.ToUpper();
-                            appl.Comment = model.Comment;
-                            appl.Price = model.Price;
-                            appl.Quantity = model.Quantity;
-                            appl.Amount = model.Price * model.Quantity;
-
-                            _db.Applications.Update(appl);
-                            await _db.SaveChangesAsync();
-                            
+                            UpdateApplication(appl, client, model);
                             return RedirectToAction("Index");
                         }
                         
                         Client newClient = new Client() {CodeClient = model.CodeClient.ToUpper(), Title = model.NameClient};
-
                         _db.Clients.Add(newClient);
                         await _db.SaveChangesAsync();
-                        
-                        appl.Client = newClient;
-                        appl.ClientId = newClient.Id;
-                        appl.ArticleNumber = model.ArticleNumber.ToUpper();
-                        appl.Comment = model.Comment;
-                        appl.Price = model.Price;
-                        appl.Quantity = model.Quantity;
-                        appl.Amount = model.Price * model.Quantity;
 
-                        _db.Applications.Update(appl);
-                        await _db.SaveChangesAsync();
-
+                        UpdateApplication(appl, newClient, model);
                         return RedirectToAction("Index");
                     }
 
@@ -197,11 +161,62 @@ namespace CRM_Upack_kz.Controllers
                 return Content($"Внимание ошибка: {e.TargetSite}: {e.Message} | {e.StackTrace}");
             }
         }
-        
-        
-        
-        
 
+        [HttpPost]
+        public IActionResult ChangeDateWaite(string applId, DateTime date, string comment, string state)
+        {
+            if (applId != null)
+            {
+                Application appl = _db.Applications.FirstOrDefault(a => a.Id == applId);
+                if (appl != null)
+                {
+                    switch (state)
+                    {
+                        case "Новая":
+                            appl.AppState = AppState.Ожидается;
+                            break;
+                        
+                        case "Ожидается":
+                            appl.AppState = AppState.Закрыта;
+                            break;
+                        
+                        case "Закрыта":
+                            return Content("Данное обращение было успешно закрыто");
+                    }
+                    
+                    appl.WaitingDate = date;
+                    appl.Comment = comment;
+                    
+                    _db.Applications.Update(appl);
+                    _db.SaveChanges();
+                    
+                    return RedirectToAction("Index");
+                }
+                
+                return Content("По указанному Id не найдено обращения");
+            }
+            
+            return Content("Не найдено Id обращения");
+        }
+        
+        
+        
+        
+        [HttpGet]
+        public async Task<IActionResult> ConfirmDelete(string id)
+        {
+            if (id != null)
+            {
+                Application appl = await _db.Applications.FirstOrDefaultAsync(a => a.Id == id);
+                if (appl != null)
+                {
+                    return View(appl);
+                }
+                return Content("Данное обращение не найденно");
+            }
+            return Content("Неверный Id");
+        }
+        
         [HttpPost]
         public async Task<IActionResult> Delete(string id)
         {
@@ -232,7 +247,6 @@ namespace CRM_Upack_kz.Controllers
           return Content("Клиент не найден, заполните клиента");
         }
 
-
         [NonAction]
         private void SaveApplication(User manager, Client client, ApplViewModel model)
         {
@@ -252,8 +266,22 @@ namespace CRM_Upack_kz.Controllers
             _db.Applications.Add(application);
             _db.SaveChanges();
         } 
-    
         
+        [NonAction]
+        private void UpdateApplication(Application appl, Client client, ApplViewModel model)
+        {
+            appl.Client = client;
+            appl.ClientId = client.Id;
+            appl.ArticleNumber = model.ArticleNumber.ToUpper();
+            appl.Comment = model.Comment;
+            appl.Price = model.Price;
+            appl.Quantity = model.Quantity;
+            appl.Amount = model.Price * model.Quantity;
+
+            _db.Applications.Update(appl);
+            _db.SaveChanges();
+        }
+
         [NonAction]
         private void CheckClient(User manager, Client client, ApplViewModel model)
         {
@@ -263,16 +291,10 @@ namespace CRM_Upack_kz.Controllers
             }
             else
             {
-                Client newClient = new Client()
-                {
-                    CodeClient = model.CodeClient.ToUpper(),
-                    Title = model.NameClient
-                };
-
+                Client newClient = new Client() {CodeClient = model.CodeClient.ToUpper(), Title = model.NameClient};
                 _db.Clients.Add(newClient);
                 _db.SaveChanges();
                 SaveApplication(manager, newClient, model);
-
             }
         }
 

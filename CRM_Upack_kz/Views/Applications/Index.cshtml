@@ -1,5 +1,6 @@
 ﻿@using X.PagedList.Mvc.Core
 @using X.PagedList.Mvc.Bootstrap4.Core
+@using CRM_Upack_kz.Enums
 @inject UpackContext _db
 @model X.PagedList.IPagedList<Application>
 
@@ -36,11 +37,19 @@
           {
             <tr>
               <td class="font text-dark">@appl.Manager.Surname @appl.Manager.Name</td>
-              <td class="font text-dark">@appl.CreateDate.ToShortDateString()</td>
-              <td class="font text-danger">
+              <td class="font text-dark">@appl.CreateDate.ToShortDateString() @appl.CreateDate.ToShortTimeString()</td>
+              <td class="font @if(appl.WaitingDate != new DateTime(0001, 01, 01)) 
+                              {
+                                @:text-success
+                              } 
+                              else
+                              { 
+                                @:text-danger
+                              }
+                             ">
                 @if (appl.WaitingDate != new DateTime(0001, 01, 01))
                 {
-                  @appl.WaitingDate.ToShortDateString()
+                  <b>@appl.WaitingDate.ToShortDateString()</b>
                 }
                 else
                 {
@@ -56,9 +65,33 @@
               <td class="font text-dark">@appl.Comment</td>
               <td>
                 <div class="btn-group btn-group-sm shadow" role="group" aria-label="Button group with nested dropdown">
-                  <button type="button" class="btn btn-success" title="Ответить">Ответить</button>
-                  <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
-                  <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                  @if (appl.AppState == AppState.Ожидается)
+                  {
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
+                    <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                    <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                  }
+                  else if (appl.AppState == AppState.Новая)
+                  {
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
+                    <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                    <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                  }
+                  else if (appl.AppState == AppState.Закрыта & User.IsInRole("admin"))
+                  {
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
+                    <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                    <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                  }
+                  else if (appl.AppState == AppState.Закрыта)
+                  {
+                    <button type="button" class="btn btn-outline-success" disabled>Закрыто</button>
+
+                  }
+                                    
+                  
+                  
                 </div>
               </td>
             </tr>
@@ -74,6 +107,35 @@
       @Html.PagedListPager(Model, page => Url.Action("Index", "Applications", new { page }), Bootstrap4PagedListRenderOptions.Default)
     </div>
     
+    
+    <div class="modal fade" id="calendar" tabindex="-1" aria-labelledby="calendarCaption" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="calendarCaption">Укажите дату ожидания</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+          </div>
+          <div class="modal-body">
+            <form asp-controller="Applications" asp-action="ChangeDateWaite" method="post">
+              <div class="mb-3">
+                <label id="dateWaite" for="date" class="col-form-label">Дата ожидания:</label>
+                <input type="datetime-local" class="form-control" name="date" id="date" onchange="ValidationDate()">
+                <input type="text" name="applId" value="" id="sendId" hidden="true">
+                <input type="text" name="state" value="" id="applState" hidden="true">
+              </div>
+              <div class="mb-3">
+                <label for="message-text" class="col-form-label">Комментарий:</label>
+                <textarea class="form-control" id="message-text" name="comment"></textarea>
+              </div>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">закрыть</button>
+              <input id="sendProduct" type="submit" class="btn btn-primary" hidden="true" value="Товар поступил">
+              <input id="sendCalendar" type="submit" class="btn btn-primary" hidden="true" value="сохранить">
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    
   }
   else{<h3>Обращений не поступило, добавьте новые обращения</h3>}
 }
@@ -84,6 +146,78 @@
     $(document).ready(function () {
         $('#caption').text("Список обращений");
     });
+    
+    let startDate = new Date();
+    let endDate = new Date();
+    let dateWaite = new Date();
+    let _state = '';
+    
+    function ValidationDate(){
+        
+        dateWaite = new Date($('#date').val().substring(0,10));
+                       
+        if (startDate <= dateWaite && dateWaite <= endDate)
+        {
+          if (_state === 'Новая')
+          {
+            $('#sendCalendar').attr("hidden", false);
+            $('#sendProduct').attr("hidden", true);
+          }
+          else if (_state === 'Ожидается')
+          {
+            $('#sendCalendar').attr("hidden", true);
+            $('#sendProduct').attr("hidden", false); 
+          }
+          
+          $('#date, #dateWaite').removeClass("text-danger is-invalid");
+          $('#date, #dateWaite').addClass("text-success is-valid");
+            
+            return true;
+        }
+        else 
+        {
+          alert('Выберите крректную дату');
+          $('#sendCalendar').attr("hidden", true);
+          $('#sendProduct').attr("hidden", true);
+          $('#date, #dateWaite').val('').addClass("text-danger is-invalid");
+          $('#date, #dateWaite').removeClass("text-success is-valid");
+          
+          return false;
+        }
+    }
+    
+    function check(applId, date, state){
+      $('#date, #dateWaite').val('').removeClass("text-danger is-invalid text-success is-valid");
+      $('#sendProduct').attr("hidden", true);
+      $('#message-text').val('');
+      $('#sendId').val(applId);
+      $('#applState').val(state);
+      _state = state;
+      setDates(date)
+    }
+    
+    
+    function checkWaiteDate(applId, date, dateWaite, timeWaite, comment, state)
+    {
+      $('#date').val(dateWaite.substring(6,10) + "-" + dateWaite.substring(3,5) + "-" + dateWaite.substring(0,2) + "T" + "23:00");
+      $('#message-text').val(comment);
+      $('#sendId').val(applId);
+      $('#applState').val(state);
+      _state = state;
+      setDates(date);
+      ValidationDate();
+    }
+    
+    function setDates(date)
+    {
+      let start = date.substring(6,10) + "." + date.substring(3,5) + "." + date.substring(0,2);
+      startDate = new Date(start);
+      let year = startDate.getFullYear() + 1;
+      let end = year + "." + date.substring(3,5) + "." + date.substring(0,2);
+      endDate = new Date(end);
+    }
+       
+    
  </script>
 }
 
