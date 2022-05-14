@@ -1,10 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using CRM_Upack_kz.Enums;
 using CRM_Upack_kz.Models;
-using CRM_Upack_kz.ViewModel;
+using CRM_Upack_kz.Services;
 using CRM_Upack_kz.ViewModels;
+using CRM_Upack_kz.ViewModels;
+using ExcelLibrary.BinaryFileFormat;
+using ExcelLibrary.SpreadSheet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -115,11 +121,11 @@ namespace CRM_Upack_kz.Controllers
                         Comment = appl.Comment
                     };
                     ViewBag.ApplId = appl.Id;
+                    ViewBag.StateAppl = appl.AppState;
                     return View(model);
                 }
                 return Content("Не найдено обращение");
             }
-
             return Content("Неверный Id");
         }
 
@@ -297,6 +303,86 @@ namespace CRM_Upack_kz.Controllers
                 SaveApplication(manager, newClient, model);
             }
         }
+        
+        
+        public VirtualFileResult GetVirtualFile(DateTime startDate, DateTime endDate, string managerId, string codeClient)
+        {
+            List<Application> applications = FilterApplications(startDate, endDate, managerId, codeClient);
+            CreateExcelFile(applications);
+            
+            var filepath = Path.Combine("~/Files", "Выгрузка.xls");
+            return File(filepath, "text/plain", "Выгрузка.xls");
+        }
 
+        [NonAction]
+        private List<Application> FilterApplications(DateTime startDate, DateTime endDate, string managerId, string codeClient)
+        {
+            List<Application> applications = new List<Application>();
+            endDate = endDate == new DateTime(0001, 01, 01) ? DateTime.Now : endDate;
+            
+            if (managerId != null & codeClient == null)
+            {
+                applications = _db.Applications
+                    .Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate)
+                    .Where(a => a.Manager.Id == managerId).ToList();
+            }
+            else if (managerId == null & codeClient != null)
+            {
+                applications = _db.Applications
+                    .Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate)
+                    .Where(a => a.Client.CodeClient == codeClient).ToList();
+            }
+            else if(managerId != null & codeClient != null)
+            {
+                applications = _db.Applications
+                    .Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate)
+                    .Where(a => a.Manager.Id == managerId)
+                    .Where(a => a.Client.CodeClient == codeClient).ToList();
+            }
+            else
+            {
+                applications = _db.Applications.Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate).ToList();
+            }
+            
+            return applications;
+        }
+
+        [NonAction]
+        private void CreateExcelFile(List<Application> applications)
+        {
+            string file = Path.Combine(_environment.ContentRootPath, "wwwroot/Files/Выгрузка.xls"); 
+            Workbook workbook = new Workbook();
+            Worksheet worksheet = new Worksheet("Страница 1");
+            
+            for(int i = 0;i < 100; i++)
+                worksheet.Cells[i,0] = new Cell("");
+            
+            int count = 0;
+            foreach (var appl in applications)
+            {
+                for (int i = 0; i < _db.Applications.ToList().Count; i++)
+                {
+                    worksheet.Cells.ColumnWidth[0, (ushort)i] = 5000;
+                }
+                
+                worksheet.Cells[count, 0] = new Cell($"{appl.Manager.Surname} {appl.Manager.Name}");
+                worksheet.Cells[count, 1] = new Cell(appl.CreateDate.ToShortDateString() + "   " + appl.CreateDate.ToShortTimeString(), @"DD-MM-YYYY");
+                if (appl.WaitingDate != new DateTime(0001, 01, 01))
+                {
+                    worksheet.Cells[count, 2] = new Cell(appl.WaitingDate.ToShortDateString(), @"DD-MM-YYYY");
+                }
+                worksheet.Cells[count, 3] = new Cell(appl.Client.CodeClient);
+                worksheet.Cells[count, 4] = new Cell(appl.Client.Title);
+                worksheet.Cells[count, 5] = new Cell(appl.ArticleNumber);
+                worksheet.Cells[count, 6] = new Cell(appl.Quantity);
+                worksheet.Cells[count, 7] = new Cell(appl.Price);
+                worksheet.Cells[count, 8] = new Cell(appl.Amount);
+                worksheet.Cells[count, 9] = new Cell(appl.Comment);
+                count++;
+            }
+
+            workbook.Worksheets.Add(worksheet);
+            workbook.Save(file);
+        }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace CRM_Upack_kz.ViewModel
+namespace CRM_Upack_kz.ViewModels
 {
     public class LoginViewModel
     {

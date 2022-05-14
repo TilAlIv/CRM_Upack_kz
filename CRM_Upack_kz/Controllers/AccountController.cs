@@ -1,18 +1,23 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using CRM_Upack_kz.Models;
-using CRM_Upack_kz.ViewModel;
+using CRM_Upack_kz.Services;
+using CRM_Upack_kz.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
-using WebStudio.Services;
+
 
 namespace CRM_Upack_kz.Controllers
 {
-    
+    [Authorize]
     public class AccountController : Controller
     {
         private UpackContext _db;
@@ -36,14 +41,14 @@ namespace CRM_Upack_kz.Controllers
             _iLogger = iLogger;
         }
 
-        [Authorize]
+        
         [HttpGet]
         public IActionResult Register()
         {
             return View();
         }
         
-        [Authorize]
+        
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
@@ -74,7 +79,6 @@ namespace CRM_Upack_kz.Controllers
                 if (result.Succeeded)
                 {
                     await _userManager.AddToRoleAsync(user, "user");
-                    await _signInManager.SignInAsync(user, false);
                     return RedirectToAction("Index", "Applications");
                 }
                 
@@ -88,14 +92,15 @@ namespace CRM_Upack_kz.Controllers
 
             return View(model);
         }
-        
-        
+
+        [AllowAnonymous]
         [HttpGet]
         public IActionResult Login()
         {
             return View();
         }
         
+        [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
@@ -124,6 +129,137 @@ namespace CRM_Upack_kz.Controllers
             await _signInManager.SignOutAsync();
             return RedirectToAction("Login");
         }
+
+        [HttpGet]
+        public IActionResult Index()
+        {
+            return View(_db.Users.ToList());
+        }
+        
+        
+        [HttpGet]
+        public IActionResult Edit(string userId)
+        {
+            try
+            {
+                User user = _userManager.FindByIdAsync(userId).Result;
+
+                EditUserViewModel model = new EditUserViewModel
+                {
+                    Name = user.Name,
+                    Surname = user.Surname,
+                    Email = user.Email,
+                    PhoneNumber =  user.PhoneNumber,
+                    DateOfBirth = user.DateOfBirth,
+                    AvatarPath = user.AvatarPath
+                    
+                };
+
+                ViewBag.UserId = user.Id;
+                _nLogger.Info($"Открыта страница редактирования профиля пользователя {user.Surname} {user.Name}");
+                return View(model);
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание, ошибка: {e.Message} => {e.StackTrace}");
+                throw;
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(EditUserViewModel model, string userId)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    string path = Path.Combine(_environment.ContentRootPath, "wwwroot/Images/Avatars");
+
+                    User user = _userManager.FindByIdAsync(userId).Result;
+                    user.Name = model.Name;
+                    user.Surname = model.Surname;
+                    user.Email = model.Email;
+                    user.PhoneNumber = model.PhoneNumber;
+                    user.DateOfBirth = model.DateOfBirth;
+                    
+                    if (model.File != null)
+                    {
+                        user.AvatarPath = $"/Images/Avatars/{model.File.FileName}";
+                        _uploadService.Upload(path, model.File.FileName, model.File);
+                    }
+
+                    await _userManager.UpdateAsync(user);
+                    return RedirectToAction("Index");
+                }
+
+                return View(model);
+
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание, ошибка: {e.Message} => {e.StackTrace}");
+                throw;
+            }
+        }
+
+        [HttpGet]
+        public IActionResult Detail(string userId)
+        {
+            if (userId != null)
+            {
+                User user = _userManager.FindByIdAsync(userId).Result;
+                if (user != null)
+                {
+                    return View(user);
+                }
+
+                return Content("Такой пользователь отсутствует");
+            }
+
+            return Content("Id пользователя не получен");
+        }
+
+
+        [HttpGet]
+        [ActionName("Delete")]
+        public IActionResult ConfirmDelete(string userId)
+        {
+            if (userId != null)
+            {
+                User user = _userManager.FindByIdAsync(userId).Result;
+                if (user != null)
+                {
+                    return View(user);
+                }
+
+            }
+
+            return NotFound();
+        }
+
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(string userId)
+        {
+            if (userId != null)
+            {
+                User user = _userManager.FindByIdAsync(userId).Result;
+                if (user != null)
+                {
+                    _db.Entry(user).State = EntityState.Deleted;
+                    await _db.SaveChangesAsync();
+                    return RedirectToAction("Index");
+                }
+
+                return Content("Такой пользователь отсутствует");
+            }
+
+            return Content("Id пользователя не получен");
+        }
+
+
+
+
 
 
 

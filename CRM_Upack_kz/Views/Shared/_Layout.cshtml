@@ -1,4 +1,7 @@
-﻿<html lang="ru"><head>
+﻿@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject UserManager<User> UserManager
+<html lang="ru"><head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
@@ -20,9 +23,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300&display=swap" rel="stylesheet">
     
-    
-
-
     <style>
       .bd-placeholder-img {
         font-size: 1.125rem;
@@ -59,9 +59,9 @@
   <input class="form-control form-control-dark w-100" type="text" placeholder="Поиск" aria-label="Search">
   <div class="navbar-nav">
     <div class="nav-item text-nowrap">
-      <form method="post" asp-controller="Account" asp-action="LogOff">
-        <input style="border:0px solid black; background-color: transparent; outline:none; " class="nav-link px-3 pt-2 pb-0 m-0" type="submit" value="Выход" />
-      </form>
+      @*<form method="post" asp-controller="Account" asp-action="LogOff">
+        <input style="border:0px solid black; background-color: transparent; outline:none; " class="nav-link px-3 pt-2 pb-0 m-0" type="submit" value="Выход"/>
+      </form>*@
     </div>
   </div>
 </header>
@@ -72,17 +72,22 @@
       <div class="position-sticky pt-3">
         <ul class="nav flex-column">
           <li class="nav-item">
-            <a class="nav-link" aria-current="page" href="#">
+            <a id="applications" class="nav-link" aria-current="page" asp-controller="Applications" asp-action="Index">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-              Dashboard
+              Обращения
             </a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file" aria-hidden="true"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-              Orders
-            </a>
-          </li>
+          @if (User.IsInRole("admin"))
+          {
+            <li class="nav-item">
+              <a id="users" class="nav-link" asp-controller="Account" asp-action="Index">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                Пользователи
+              </a>
+            </li>
+          }
+          
+          
           <li class="nav-item">
             <a class="nav-link" href="#">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-shopping-cart" aria-hidden="true"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
@@ -91,7 +96,7 @@
           </li>
           <li class="nav-item">
             <a class="nav-link" href="#">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-users" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file" aria-hidden="true"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
               Customers
             </a>
           </li>
@@ -158,15 +163,78 @@
         <h2 id="caption" class="font"></h2>
         <div class="btn-toolbar mb-2 mb-md-0">
           <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
-            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
+            <button type="button" class="btn btn-sm btn-outline-secondary shadow-sm" data-bs-toggle="modal" data-bs-target="#RequestData"  title="экспорт" onclick=""><i class="bi bi-download p-1"></i> Экспорт</button>
+            @if (User.IsInRole("admin"))
+            {
+              <a class="btn btn-sm btn-outline-secondary shadow-sm" asp-action="Register" asp-controller="Account"><i class="bi bi-person-plus p-1"></i>Новый пользователь</a>
+            }
           </div>
-          <a class="btn btn-sm btn-outline-secondary" asp-action="Create" asp-controller="Applications"><i class="bi bi-plus-circle"></i>
-            Добавить
-          </a>
+          <a class="btn btn-sm btn-outline-secondary shadow-sm me-2" asp-action="Create" asp-controller="Applications"><i class="bi bi-plus-circle p-1"></i>Добавить</a>
+          
+          <div class="dropdown shadow-sm">
+            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownMenuButton2" data-bs-toggle="dropdown" aria-expanded="false">
+              @{ User user = @UserManager.FindByEmailAsync(User.Identity.Name).Result;} @user.Surname @user.Name
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark shadow-lg" aria-labelledby="dropdownMenuButton2">
+              <li><a class="dropdown-item" asp-controller="Account" asp-action="Detail" asp-route-userId="@UserManager.FindByEmailAsync(User.Identity.Name).Result.Id">Мой профиль</a></li>
+              <li><a class="dropdown-item" href="#">Сообщений <span class="badge bg-success">4</span></a></li>
+              <li><a class="dropdown-item" href="#">Мои заявки <span class="badge bg-success">26</span></a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <form class="mb-0" method="post" asp-controller="Account" asp-action="LogOff">
+                  <input class="dropdown-item" type="submit" value="Выход"/>
+                </form>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
-
+      <div class="modal fade" id="RequestData" tabindex="-1" aria-labelledby="calendarCaption" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="calendarCaption">Выберите параметры для выгрузки:</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" ></button>
+            </div>
+            <div class="modal-body">
+              <form asp-controller="Applications" asp-action="GetVirtualFile" method="post">
+                <div class="mb-3">
+                  <div class="input-group">
+                    <span class="input-group-text">Дата создания:</span>
+                    <input type="date" aria-label="First name" name="startDate" class="form-control shadow-sm">
+                    <input type="date" aria-label="Last name" name="endDate" class="form-control shadow-sm">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="input-group">
+                    <input id="infoCl" class="form-control shadow-sm" placeholder="Имя клиента" disabled>
+                    <input id="codeCl" class="form-control shadow-sm" name="codeClient" placeholder="Введите код клиента" onchange="GetInfoClientAjaxLayout()">
+                  </div>
+                </div>
+                <div class="mb-3">
+                  <div class="input-group">
+                    @if (UserManager.Users.Count() != 0)
+                    {
+                      <select class="form-select shadow-sm" name="managerId">
+                        <option class="col-4" disabled selected>Выберите менеджера</option>
+                        @foreach (var user in UserManager.Users.ToList())
+                        {
+                          if (@user.RoleDisplay != "admin")
+                          {
+                            <option class="col-4" value="@user.Id">@user.Surname @user.Name</option>
+                          }
+                        }
+                      </select>
+                    }
+                  </div>
+                </div>
+                <input id="Form" type="submit" class="btn btn-primary shadow" data-bs-dismiss="modal" value="Сформировать">
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+      
       <div class="table-responsive">
         <main role="main" class="pb-3">
           @RenderBody()
@@ -179,6 +247,9 @@
 </div>
 
 
+  
+
+
 <script src="https://getbootstrap.com/docs/5.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-ka7Sk0Gln4gmtz2MlQnikT1wXgYsOg+OMhuP+IlRH9sENBO0LRn5q+8nbTov4+1p" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/feather-icons@4.28.0/dist/feather.min.js" integrity="sha384-uO3SXW5IuS1ZpFPKugNNWqTZRRglnUJK6UAZ/gxOX80nxEkN9NcGZTftn6RzhGWE" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js" integrity="sha384-zNy6FEbO50N+Cg5wap8IKA4M/ZnLJgzc6w2NqACZaK0u0FXfOWRRJOnQtpZun8ha" crossorigin="anonymous"></script>
@@ -189,6 +260,31 @@
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <script src="~/js/site.js" asp-append-version="true"></script>
 @await RenderSectionAsync("Scripts", required: false)
+
+<script >
+    function GetInfoClientAjaxLayout(){
+        var codeClient = $('#codeCl').val();
+                
+        $.ajax({
+            url : '@Url.Action("GetInfoClientAjax", "Applications")',
+            type : 'GET',
+            data : {
+                'codeClient' : codeClient
+            },
+            success : function (data){
+                if (data === "Клиент не найден, заполните клиента") {
+                   $('#infoCl').val('');
+                   $('#infoCl').attr('placeholder', data); 
+                }
+                else {
+                    $('#infoCl').val(data); 
+                }
+            }
+        });
+    }
+     
+    
+  </script>
   
 
 </body>

@@ -1,0 +1,47 @@
+﻿@model User
+
+@{
+    
+    Layout = "_Layout";
+}
+
+<table class="table table-hover">
+    <thead class="table-light">
+    <tr>
+        <th scope="col">Имя</th>
+        <th scope="col">Фамилия</th>
+        <th scope="col">email</th>
+        <th scope="col"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td>@Model.Surname</td>
+        <td>@Model.Name</td>
+        <td>@Model.Email</td>
+        <td></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="text-center col-sm-3 col-md-3 col-lg-12">
+    <form asp-controller="Account" asp-action="Delete" method="post" asp-route-userId="@Model.Id">
+        <input class="btn btn-danger"  type="submit" value="Да">
+        <a class="btn btn-success" asp-action="Index" asp-controller="Applications">Нет</a>
+    </form>
+</div>
+
+
+    
+
+
+
+
+@section Scripts
+{
+  <script >
+    $(document).ready(function () {
+        $('#caption').text("Удаление пользователя");
+    });
+  </script>
+}

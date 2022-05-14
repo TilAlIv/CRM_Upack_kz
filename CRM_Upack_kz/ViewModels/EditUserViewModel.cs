@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace CRM_Upack_kz.ViewModels
 {
-    public class RegisterViewModel
+    public class EditUserViewModel
     {
         [Required(ErrorMessage = "Это поле обязательно для заполнения")]
         [Display(Name = "Имя пользователя")]
@@ -31,21 +31,8 @@ namespace CRM_Upack_kz.ViewModels
         [MaxLength (12, ErrorMessage = "Максимальная длина номера не может быть больше 12 символов")]
         [MinLength(3, ErrorMessage = "Минимальная длина номера должена быть не меньше 3 символов")]
         public string PhoneNumber { get; set; }
+
         public string AvatarPath { get; set; }
-        
-        
         public IFormFile File { get; set; }
-
-        [Required(ErrorMessage = "Это поле обязательно для заполнения")]
-        [Display(Name = "Пароль")]
-        [DataType(DataType.Password)]
-        public string Password { get; set; }
-
-        [Compare("Password", ErrorMessage = "Пароли не совпадают")]
-        [Required(ErrorMessage = "Это поле обязательно для заполнения")]
-        [Display(Name = "Подтверждение пароля")]
-        [DataType(DataType.Password)]
-        public string ConfirmPassword { get; set; }
-
     }
 }

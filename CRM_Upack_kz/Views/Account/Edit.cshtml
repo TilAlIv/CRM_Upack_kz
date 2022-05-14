@@ -1,0 +1,68 @@
+﻿@model CRM_Upack_kz.ViewModels.EditUserViewModel
+
+@{
+    string date = Model.DateOfBirth.ToShortDateString().Substring(6,4) + "-" + Model.DateOfBirth.ToShortDateString().Substring(3,2) + "-" + Model.DateOfBirth.ToShortDateString().Substring(0,2);
+    Layout = "_Layout";
+}
+
+ 
+<div class="col-md-4 pt-3 pb-4 ">
+     
+     <div class="form-group ">
+         <img src="..\..\@Model.AvatarPath" class="img-fluid rounded-start pb-3" alt="...">
+     </div>
+     
+     <form asp-action="Edit" asp-controller="Account" method="post" asp-route-userId="@ViewBag.UserId" enctype="multipart/form-data">
+         <div class="text-danger" asp-validation-summary="ModelOnly"></div>
+         <div class="form-group mb-3">
+             <label asp-for="Name"></label>
+             <input id="name" class="form-control shadow-sm" asp-for="Name" value="@Model.Name">
+             <small><span asp-validation-for="Name" class="text-danger"></span></small>
+         </div>
+         <div class="form-group mb-3">
+             <label asp-for="Surname"></label>
+             <input id="surname" class="form-control shadow-sm" asp-for="Surname" value="@Model.Surname">
+             <small><span asp-validation-for="Surname" class="text-danger"></span></small>
+         </div>
+         
+         <div class="form-group mb-3">
+             <label asp-for="Email"></label>
+             <input id="email" class="form-control shadow-sm" asp-for="Email" value="@Model.Email">
+             <small><span asp-validation-for="Email" class="text-danger"></span></small>
+         </div>
+         
+         <div class="form-group mb-3">
+             <label asp-for="DateOfBirth"></label>
+             <input id="birth" type="date" class="form-control shadow-sm" asp-for="DateOfBirth" value="@date">
+             <small><span asp-validation-for="DateOfBirth" class="text-danger"></span></small>
+         </div>
+         
+         <div class="form-group mb-3">
+             <label asp-for="PhoneNumber"></label>
+             <input id="phone" class="form-control shadow-sm" asp-for="PhoneNumber" value="@Model.PhoneNumber">
+             <small><span asp-validation-for="PhoneNumber" class="text-danger"></span></small>
+         </div>
+         
+         <div class="input-group mb-2">
+           <label class="input-group-text" for="inputGroupFile01">Загрузить фото</label>
+           <input type="file" class="form-control" id="inputGroupFile01" asp-for="File">
+         </div>
+         
+         <div>
+             <input type="submit" id="edit" class="btn btn-outline-primary shadow-sm" value="Изменить">
+         </div>
+         
+    </form>
+</div>
+
+
+
+
+@section Scripts
+{
+    <script >
+        $(document).ready(function () {
+            $('#caption').text("Редактирование пользователя");
+        });
+    </script>
+}

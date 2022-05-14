@@ -1,0 +1,33 @@
+﻿@model User
+
+@{
+    ViewBag.Title = "title";
+    Layout = "_Layout";
+}
+
+<div class="card mb-3 shadow-sm" style="max-width: 540px;">
+  <div class="row g-0">
+    <div class="col-md-4">
+      <img src="..\..\@Model.AvatarPath" class="img-fluid rounded-start" alt="фото профиля">
+    </div>
+    <div class="col-md-8">
+      <div class="card-body">
+        <h4 class="card-title font mb-2">@Model.Surname @Model.Name</h4>
+        <hr class="m-0 mb-3">
+        <p class="card-text fs-6 mb-1 text-secondary font"><b><i class="bi bi-envelope text-secondary p-2"></i></b> @Model.Email</p>
+        <p class="card-text fs-6 mb-1 text-secondary font"><b><i class="bi bi-calendar3 text-secondary p-2"></i></b> @Model.DateOfBirth.ToShortDateString()</p>
+        <p class="card-text fs-6 mb-1 text-secondary font"><b><i class="bi bi-phone text-secondary p-2"></i></b> @Model.PhoneNumber</p>
+        <p class="card-text fs-6 mb-1 text-secondary font"><b><i class="bi bi-person text-secondary p-2"></i></b> @Model.RoleDisplay</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+@section Scripts
+{
+  <script >
+    $(document).ready(function () {
+        $('#caption').text("Карточка пользователя");
+    });
+  </script>
+}

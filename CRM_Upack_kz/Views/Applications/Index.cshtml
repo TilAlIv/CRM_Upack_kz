@@ -16,7 +16,7 @@
   {
     <div class="text-center col col-sm-3 col-md-4 col-lg-12">
       <table class="table table-hover">
-        <thead class="table-secondary">
+        <thead class="table-light">
         <tr>
           <th scope="col" class="font">Менеджер</th>
           <th scope="col" class="font">Дата создания</th>
@@ -87,11 +87,7 @@
                   else if (appl.AppState == AppState.Закрыта)
                   {
                     <button type="button" class="btn btn-outline-success" disabled>Закрыто</button>
-
                   }
-                                    
-                  
-                  
                 </div>
               </td>
             </tr>
@@ -122,6 +118,9 @@
                 <input type="datetime-local" class="form-control" name="date" id="date" onchange="ValidationDate()">
                 <input type="text" name="applId" value="" id="sendId" hidden="true">
                 <input type="text" name="state" value="" id="applState" hidden="true">
+                
+                <input type="date" class="form-control" name="startDate" id="startDate" hidden="true">
+                <input type="date" class="form-control" name="endDate" id="endDate" hidden="true">
               </div>
               <div class="mb-3">
                 <label for="message-text" class="col-form-label">Комментарий:</label>
@@ -145,6 +144,8 @@
   <script >
     $(document).ready(function () {
         $('#caption').text("Список обращений");
+        $('#applications').addClass("active");
+        $('#users').removeClass("active");
     });
     
     let startDate = new Date();
@@ -193,12 +194,10 @@
       $('#sendId').val(applId);
       $('#applState').val(state);
       _state = state;
-      setDates(date)
+      setDates(date);
     }
     
-    
-    function checkWaiteDate(applId, date, dateWaite, timeWaite, comment, state)
-    {
+    function checkWaiteDate(applId, date, dateWaite, timeWaite, comment, state){
       $('#date').val(dateWaite.substring(6,10) + "-" + dateWaite.substring(3,5) + "-" + dateWaite.substring(0,2) + "T" + "23:00");
       $('#message-text').val(comment);
       $('#sendId').val(applId);
@@ -208,8 +207,7 @@
       ValidationDate();
     }
     
-    function setDates(date)
-    {
+    function setDates(date){
       let start = date.substring(6,10) + "." + date.substring(3,5) + "." + date.substring(0,2);
       startDate = new Date(start);
       let year = startDate.getFullYear() + 1;

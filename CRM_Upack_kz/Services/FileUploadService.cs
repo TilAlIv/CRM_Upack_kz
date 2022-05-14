@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using Microsoft.AspNetCore.Http;
 
-namespace WebStudio.Services
+namespace CRM_Upack_kz.Services
 {
     public class FileUploadService
     {

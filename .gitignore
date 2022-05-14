@@ -6,5 +6,7 @@ riderModule.iml
 [Dd]ebug
 [Oo]bj
 /.idea/
+/.xls/
+/.txt/
 /Migrations/
 appsettings.json

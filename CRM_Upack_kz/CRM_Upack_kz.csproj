@@ -5,6 +5,7 @@
         <DockerDefaultTargetOS>Windows</DockerDefaultTargetOS>
     </PropertyGroup>
     <ItemGroup>
+        <PackageReference Include="ExcelLibrary" Version="1.2011.7.31" />
         <PackageReference Include="MailKit" Version="2.12.0" />
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="5.0.16" />
         <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="5.0.16">
@@ -18,6 +19,9 @@
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="5.0.10" />
         <PackageReference Include="X.PagedList.Mvc.Bootstrap4" Version="8.0.7.1" />
         <PackageReference Include="X.PagedList.Mvc.Core" Version="8.0.7" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="wwwroot\Files" />
     </ItemGroup>
 
 </Project>
