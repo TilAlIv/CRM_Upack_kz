@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CRM_Upack_kz.Jobs;
 using CRM_Upack_kz.Models;
 using CRM_Upack_kz.Services;
 using Microsoft.AspNetCore.Builder;
@@ -41,9 +42,11 @@ namespace CRM_Upack_kz
                     options.Password.RequireDigit = false; 
                 })
                 .AddEntityFrameworkStores<UpackContext>().AddDefaultTokenProviders();
-                
-            
+           
             services.AddTransient<FileUploadService>();
+            services.AddTransient<JobFactory>();
+            services.AddScoped<DataJob>();
+            services.AddScoped<IEmailSender,EmailSender>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

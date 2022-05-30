@@ -9,4 +9,5 @@ riderModule.iml
 /.xls/
 /.txt/
 /Migrations/
+[Mm]igrations/
 appsettings.json

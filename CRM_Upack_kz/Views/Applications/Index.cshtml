@@ -8,7 +8,6 @@
 @{
     ViewBag.Title = "Список проблем";
     Layout = "_Layout";
-    
 }
 
 @{
@@ -18,6 +17,7 @@
       <table class="table table-hover">
         <thead class="table-light">
         <tr>
+          <th scope="col" class="font">№</th>
           <th scope="col" class="font">Менеджер</th>
           <th scope="col" class="font">Дата создания</th>
           <th scope="col" class="font">Ожидается</th>
@@ -36,6 +36,7 @@
           foreach (var appl in Model)
           {
             <tr>
+              <td class="font text-dark"><b>@appl.NumberApplication</b></td>
               <td class="font text-dark">@appl.Manager.Surname @appl.Manager.Name</td>
               <td class="font text-dark">@appl.CreateDate.ToShortDateString() @appl.CreateDate.ToShortTimeString()</td>
               <td class="font @if(appl.WaitingDate != new DateTime(0001, 01, 01)) 
@@ -65,28 +66,34 @@
               <td class="font text-dark">@appl.Comment</td>
               <td>
                 <div class="btn-group btn-group-sm shadow" role="group" aria-label="Button group with nested dropdown">
-                  @if (appl.AppState == AppState.Ожидается)
+                  @if(User.Identity.Name == appl.Manager.Email || User.IsInRole("admin"))
                   {
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
-                    <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
-                    <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
-                  }
-                  else if (appl.AppState == AppState.Новая)
-                  {
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
-                    <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
-                    <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
-                  }
-                  else if (appl.AppState == AppState.Закрыта & User.IsInRole("admin"))
-                  {
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
-                    <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
-                    <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
-                  }
-                  else if (appl.AppState == AppState.Закрыта)
-                  {
-                    <button type="button" class="btn btn-outline-success" disabled>Закрыто</button>
+                    @if (appl.AppState == AppState.Ожидается)
+                      {
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
+                        @if (User.IsInRole("admin"))
+                        {
+                          <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                        }
+                        <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                      }
+                      else if (appl.AppState == AppState.Новая)
+                      {
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
+                        <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                        <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                      }
+                      else if (appl.AppState == AppState.Закрыта & User.IsInRole("admin"))
+                      {
+                        <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
+                        <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                        <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                      }
+                      else if (appl.AppState == AppState.Закрыта)
+                      {
+                        <button type="button" class="btn btn-outline-success" disabled>Закрыто</button>
+                      }
                   }
                 </div>
               </td>
@@ -126,7 +133,6 @@
                 <label for="message-text" class="col-form-label">Комментарий:</label>
                 <textarea class="form-control" id="message-text" name="comment"></textarea>
               </div>
-              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">закрыть</button>
               <input id="sendProduct" type="submit" class="btn btn-primary" hidden="true" value="Товар поступил">
               <input id="sendCalendar" type="submit" class="btn btn-primary" hidden="true" value="сохранить">
             </form>

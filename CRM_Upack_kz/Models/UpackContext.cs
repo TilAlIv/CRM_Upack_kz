@@ -9,6 +9,7 @@ namespace CRM_Upack_kz.Models
         public DbSet<User> Users { get; set; }
         public DbSet<Client> Clients { get; set; }
         public DbSet<Application> Applications { get; set; }
+        public DbSet<CountApplication> CountApplications { get; set; }
 
         public UpackContext(DbContextOptions options) : base(options)
         {

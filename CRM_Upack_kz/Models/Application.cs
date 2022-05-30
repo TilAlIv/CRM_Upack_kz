@@ -17,6 +17,7 @@ namespace CRM_Upack_kz.Models
         public double Price { get; set; }
         public double Amount { get; set; }
         public string Comment { get; set; }
+        public decimal NumberApplication { get; set; }
         public AppState AppState { get; set; } = AppState.Новая;
     }
 }

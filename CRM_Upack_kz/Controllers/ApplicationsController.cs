@@ -88,7 +88,7 @@ namespace CRM_Upack_kz.Controllers
                     User manager = await _userManager.FindByEmailAsync(User.Identity.Name);
                     if (manager != null)
                     {
-                        Client client = _db.Clients.FirstOrDefault(c => c.CodeClient == model.CodeClient);
+                        Client client = _db.Clients.FirstOrDefault(c => c.CodeClient == model.CodeClient || c.Title == model.NameClient.Trim());
                         CheckClient(manager, client, model); 
                         return RedirectToAction("Index");
                     }
@@ -139,7 +139,7 @@ namespace CRM_Upack_kz.Controllers
                     Application appl = _db.Applications.FirstOrDefault(ap => ap.Id == applId);
                     if (appl != null)
                     {
-                        Client client = await _db.Clients.FirstOrDefaultAsync(c => c.CodeClient == model.CodeClient);
+                        Client client = await _db.Clients.FirstOrDefaultAsync(c => c.CodeClient == model.CodeClient || c.Title == model.NameClient.Trim());
                         if (client != null)
                         {
                             UpdateApplication(appl, client, model);
@@ -206,8 +206,6 @@ namespace CRM_Upack_kz.Controllers
         }
         
         
-        
-        
         [HttpGet]
         public async Task<IActionResult> ConfirmDelete(string id)
         {
@@ -253,6 +251,12 @@ namespace CRM_Upack_kz.Controllers
           return Content("Клиент не найден, заполните клиента");
         }
 
+        /// <summary>
+        /// Сохранение обращения
+        /// </summary>
+        /// <param name="manager">менеджер создавший новое обращение</param>
+        /// <param name="client">клиент указанный менеджером</param>
+        /// <param name="model">контейнер с данными для создания нового обращения</param>
         [NonAction]
         private void SaveApplication(User manager, Client client, ApplViewModel model)
         {
@@ -268,14 +272,24 @@ namespace CRM_Upack_kz.Controllers
                 ArticleNumber = model.ArticleNumber.ToUpper(),
                 CreateDate = DateTime.Now,
                 Amount = model.Price * model.Quantity,
+                NumberApplication = _db.CountApplications.Count() + 1
             };
+            _db.CountApplications.Add(new CountApplication());
             _db.Applications.Add(application);
             _db.SaveChanges();
         } 
         
+        /// <summary>
+        /// Обновление обращения при редактировании
+        /// </summary>
+        /// <param name="appl">само обращение</param>
+        /// <param name="client">клиент</param>
+        /// <param name="model">контейнер со значениями</param>
         [NonAction]
         private void UpdateApplication(Application appl, Client client, ApplViewModel model)
         {
+            client.Title = model.NameClient;
+            
             appl.Client = client;
             appl.ClientId = client.Id;
             appl.ArticleNumber = model.ArticleNumber.ToUpper();
@@ -284,10 +298,18 @@ namespace CRM_Upack_kz.Controllers
             appl.Quantity = model.Quantity;
             appl.Amount = model.Price * model.Quantity;
 
+            _db.Clients.Update(client);
             _db.Applications.Update(appl);
             _db.SaveChanges();
         }
 
+        /// <summary>
+        /// Проверка клиента на его наличие, если клиент существует уже в БД, то он просто сохраняетя, если это он отсутствует,
+        /// то создадим нового клиента и сохраним новое обращение.
+        /// </summary>
+        /// <param name="manager">менеджер создающий новое обращение</param>
+        /// <param name="client">проверяемый клиент на его наличие в БД</param>
+        /// <param name="model">передаваемый контейнер с параметрами</param>
         [NonAction]
         private void CheckClient(User manager, Client client, ApplViewModel model)
         {
@@ -360,24 +382,25 @@ namespace CRM_Upack_kz.Controllers
             int count = 0;
             foreach (var appl in applications)
             {
-                for (int i = 0; i < _db.Applications.ToList().Count; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     worksheet.Cells.ColumnWidth[0, (ushort)i] = 5000;
                 }
                 
-                worksheet.Cells[count, 0] = new Cell($"{appl.Manager.Surname} {appl.Manager.Name}");
-                worksheet.Cells[count, 1] = new Cell(appl.CreateDate.ToShortDateString() + "   " + appl.CreateDate.ToShortTimeString(), @"DD-MM-YYYY");
+                worksheet.Cells[count, 0] = new Cell("№: " + appl.NumberApplication);
+                worksheet.Cells[count, 1] = new Cell($"{appl.Manager.Surname} {appl.Manager.Name}");
+                worksheet.Cells[count, 2] = new Cell(appl.CreateDate.ToShortDateString() + "   " + appl.CreateDate.ToShortTimeString(), @"DD-MM-YYYY");
                 if (appl.WaitingDate != new DateTime(0001, 01, 01))
                 {
-                    worksheet.Cells[count, 2] = new Cell(appl.WaitingDate.ToShortDateString(), @"DD-MM-YYYY");
+                    worksheet.Cells[count, 3] = new Cell(appl.WaitingDate.ToShortDateString(), @"DD-MM-YYYY");
                 }
-                worksheet.Cells[count, 3] = new Cell(appl.Client.CodeClient);
-                worksheet.Cells[count, 4] = new Cell(appl.Client.Title);
-                worksheet.Cells[count, 5] = new Cell(appl.ArticleNumber);
-                worksheet.Cells[count, 6] = new Cell(appl.Quantity);
-                worksheet.Cells[count, 7] = new Cell(appl.Price);
-                worksheet.Cells[count, 8] = new Cell(appl.Amount);
-                worksheet.Cells[count, 9] = new Cell(appl.Comment);
+                worksheet.Cells[count, 4] = new Cell(appl.Client.CodeClient);
+                worksheet.Cells[count, 5] = new Cell(appl.Client.Title);
+                worksheet.Cells[count, 6] = new Cell(appl.ArticleNumber);
+                worksheet.Cells[count, 7] = new Cell(appl.Quantity);
+                worksheet.Cells[count, 8] = new Cell(appl.Price);
+                worksheet.Cells[count, 9] = new Cell(appl.Amount);
+                worksheet.Cells[count, 10] = new Cell(appl.Comment);
                 count++;
             }
 
