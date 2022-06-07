@@ -4,13 +4,14 @@
     Layout = "_Layout";
 }
 
-
-<table class="table table-hover">
+<div id="BaseBody" class="text-center col col-sm-3 col-md-4 col-lg-12"></div>
+<table class="baseElement table table-hover">
     <thead class="table-light">
     <tr>
         <th scope="col">Имя</th>
         <th scope="col">Фамилия</th>
         <th scope="col">email</th>
+        <th scope="col">Роль</th>
         <th scope="col"></th>
     </tr>
     </thead>
@@ -21,6 +22,7 @@
             <td>@user.Surname</td>
             <td>@user.Name</td>
             <td>@user.Email</td>
+            <td>@user.RoleDisplay</td>
             <td>
                 <div class="btn-group btn-group-sm shadow" role="group" aria-label="Button group with nested dropdown">
                     <a class="btn btn-sm btn-success p-2" title="Карточка пользователя" asp-route-userId="@user.Id" asp-action="Detail" asp-controller="Account"><i class="bi bi-person"></i></a>

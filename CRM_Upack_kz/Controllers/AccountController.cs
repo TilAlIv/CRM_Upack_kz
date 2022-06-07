@@ -72,13 +72,13 @@ namespace CRM_Upack_kz.Controllers
                     UserName = model.Email,
                     AvatarPath = avatarPath,
                     DateOfBirth = model.DateOfBirth,
-                    RoleDisplay = "user"
+                    RoleDisplay = model.Role
                 };
                 
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
-                    await _userManager.AddToRoleAsync(user, "user");
+                    await _userManager.AddToRoleAsync(user, model.Role);
                     return RedirectToAction("Index", "Applications");
                 }
                 
@@ -151,8 +151,9 @@ namespace CRM_Upack_kz.Controllers
                     Email = user.Email,
                     PhoneNumber =  user.PhoneNumber,
                     DateOfBirth = user.DateOfBirth,
-                    AvatarPath = user.AvatarPath
-                    
+                    AvatarPath = user.AvatarPath,
+                    Role = user.RoleDisplay
+
                 };
 
                 ViewBag.UserId = user.Id;
@@ -182,6 +183,13 @@ namespace CRM_Upack_kz.Controllers
                     user.PhoneNumber = model.PhoneNumber;
                     user.DateOfBirth = model.DateOfBirth;
                     
+                    if (user.RoleDisplay != model.Role)
+                    {
+                        await _userManager.RemoveFromRoleAsync(user, user.RoleDisplay);
+                        await _userManager.AddToRoleAsync(user, model.Role);
+                        user.RoleDisplay = model.Role;
+                    }
+
                     if (model.File != null)
                     {
                         user.AvatarPath = $"/Images/Avatars/{model.File.FileName}";

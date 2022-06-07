@@ -1,44 +1,63 @@
 ﻿@model CRM_Upack_kz.ViewModels.RegisterViewModel
 
 
-        <div class="text-danger" asp-validation-summary="ModelOnly"></div>
-        <div class="form-group mb-3">
-            <label asp-for="Name"></label>
-            <input id="name" class="form-control shadow-sm" asp-for="Name" value="@Model.Name">
-            <small><span asp-validation-for="Name" class="text-danger"></span></small>
-        </div>
-        <div class="form-group mb-3">
-            <label asp-for="Surname"></label>
-            <input id="surname" class="form-control shadow-sm" asp-for="Surname" value="@Model.Surname">
-            <small><span asp-validation-for="Surname" class="text-danger"></span></small>
-        </div>
-        <div class="form-group mb-3">
-            <label asp-for="Email"></label>
-            <input id="email" class="form-control shadow-sm" asp-for="Email" value="@Model.Email">
-            <small><span asp-validation-for="Email" class="text-danger"></span></small>
-        </div>
-        <div class="form-group mb-3">
-            <label asp-for="DateOfBirth"></label>
-            <input id="birth" class="form-control shadow-sm" asp-for="DateOfBirth" value="@Model.DateOfBirth">
-            <small><span asp-validation-for="DateOfBirth" class="text-danger"></span></small>
-        </div>
-        <div class="form-group mb-3">
-            <label asp-for="PhoneNumber"></label>
-            <input id="phone" class="form-control shadow-sm" asp-for="PhoneNumber" value="@Model.PhoneNumber">
-            <small><span asp-validation-for="PhoneNumber" class="text-danger"></span></small>
-        </div>
-        <div class="form-group mb-3">
-            <label>Фото</label>
-            <input class="form-control-file" asp-for="File">
-        </div>
-        <div class="form-group mb-3">
-            <label asp-for="Password"></label>
-            <input id="password" class="form-control shadow-sm" asp-for="Password" value="@Model.Password">
-            <small><span asp-validation-for="Password" class="text-danger"></span></small>
-        </div>
-        <div class="form-group mb-2">
-            <label asp-for="ConfirmPassword"></label>
-            <input id="confirmPassword" class="form-control shadow-sm" asp-for="ConfirmPassword" value="@Model.ConfirmPassword">
-            <small><span asp-validation-for="ConfirmPassword" class="text-danger"></span></small>
-        </div>
+<div class="text-danger" asp-validation-summary="ModelOnly"></div>
+<div class="form-group mb-3">
+    <label asp-for="Name"></label>
+    <input id="name" class="form-control shadow-sm" asp-for="Name" value="@Model.Name">
+    <small><span asp-validation-for="Name" class="text-danger"></span></small>
+</div>
+<div class="form-group mb-3">
+    <label asp-for="Surname"></label>
+    <input id="surname" class="form-control shadow-sm" asp-for="Surname" value="@Model.Surname">
+    <small><span asp-validation-for="Surname" class="text-danger"></span></small>
+</div>
+<div class="form-group mb-3">
+    <label asp-for="Email"></label>
+    <input id="email" class="form-control shadow-sm" asp-for="Email" value="@Model.Email">
+    <small><span asp-validation-for="Email" class="text-danger"></span></small>
+</div>
+<div class="form-group mb-3">
+    <label asp-for="DateOfBirth"></label>
+    <input id="birth" class="form-control shadow-sm" asp-for="DateOfBirth" value="@Model.DateOfBirth">
+    <small><span asp-validation-for="DateOfBirth" class="text-danger"></span></small>
+</div>
+<div class="form-group mb-3">
+    <label asp-for="PhoneNumber"></label>
+    <input id="phone" class="form-control shadow-sm" asp-for="PhoneNumber" value="@Model.PhoneNumber">
+    <small><span asp-validation-for="PhoneNumber" class="text-danger"></span></small>
+</div>
+
+<div class="form-group mb-3 p-1">
+    <label asp-for="Role"></label><br>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" asp-for="Role" type="radio" name="Role" id="inlineRadio1" value="user">
+        <label class="form-check-label" for="inlineRadio1">user</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" asp-for="Role" type="radio" name="Role" id="inlineRadio2" value="merch">
+        <label class="form-check-label" for="inlineRadio2">merch</label>
+    </div>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" asp-for="Role" type="radio" name="Role" id="inlineRadio3" value="admin">
+        <label class="form-check-label" for="inlineRadio3">admin</label>
+    </div><br>
+    <small><span asp-validation-for="Role" class="text-danger"></span></small>
+</div>
+
+
+<div class="form-group mb-3">
+    <label>Фото</label>
+    <input class="form-control-file" asp-for="File">
+</div>
+<div class="form-group mb-3">
+    <label asp-for="Password"></label>
+    <input id="password" class="form-control shadow-sm" asp-for="Password" value="@Model.Password">
+    <small><span asp-validation-for="Password" class="text-danger"></span></small>
+</div>
+<div class="form-group mb-2">
+    <label asp-for="ConfirmPassword"></label>
+    <input id="confirmPassword" class="form-control shadow-sm" asp-for="ConfirmPassword" value="@Model.ConfirmPassword">
+    <small><span asp-validation-for="ConfirmPassword" class="text-danger"></span></small>
+</div>
 

@@ -48,13 +48,15 @@ namespace CRM_Upack_kz.Controllers
         }
         
         [HttpGet]
-        public IActionResult Index(int? page, int count)
+        public IActionResult Index(int? page, string userId, AppSort sort = AppSort.NumApplDesc)
         {
             try
             {
+                List<Application> applications = GetSortApplications(sort, userId);
+                
                 int pageSize = 13;
-                int pageNumber = (page ?? 1);
-                return View(_db.Applications.ToPagedList(pageNumber, pageSize));
+                int pageNumber = page ?? 1;
+                return View(applications.ToPagedList(pageNumber, pageSize));
             }
             catch (Exception e)
             {
@@ -250,7 +252,23 @@ namespace CRM_Upack_kz.Controllers
 
           return Content("Клиент не найден, заполните клиента");
         }
+        
+        /// <summary>
+        /// Экшн по поиску информации в обращениях
+        /// </summary>
+        /// <param name="find">искомый параметр</param>
+        /// <returns></returns>
+        [HttpGet]
+        public IActionResult Find(string find)
+        {
+            if (!string.IsNullOrEmpty(find))
+            {
+                return PartialView("PartialViews/GetFindResultPartialView", FindResult(find).OrderByDescending(a => a.NumberApplication).ToList());
+            }
 
+            return Content("null");
+        }
+        
         /// <summary>
         /// Сохранение обращения
         /// </summary>
@@ -326,7 +344,14 @@ namespace CRM_Upack_kz.Controllers
             }
         }
         
-        
+        /// <summary>
+        /// Экшн для выгрузки отфильтрованного пользователем Excel файла.
+        /// </summary>
+        /// <param name="startDate">Начальная дата</param>
+        /// <param name="endDate">конечная дата</param>
+        /// <param name="managerId">передаваемый id менеджера</param>
+        /// <param name="codeClient">передаваемый код клиента</param>
+        /// <returns></returns>
         public VirtualFileResult GetVirtualFile(DateTime startDate, DateTime endDate, string managerId, string codeClient)
         {
             List<Application> applications = FilterApplications(startDate, endDate, managerId, codeClient);
@@ -336,6 +361,14 @@ namespace CRM_Upack_kz.Controllers
             return File(filepath, "text/plain", "Выгрузка.xls");
         }
 
+        /// <summary>
+        /// Метод для фильтрации обращений по выбранному способу пользователем. 
+        /// </summary>
+        /// <param name="startDate">Начальная указаная дата польз-ем или же по умолчанию 01.01.0001</param>
+        /// <param name="endDate">Конечная дата, если эта дата не указана польз-ем необходимо установить текущюю дату и время + 1 день включительно</param>
+        /// <param name="managerId">id менеджера</param>
+        /// <param name="codeClient">код клиента</param>
+        /// <returns></returns>
         [NonAction]
         private List<Application> FilterApplications(DateTime startDate, DateTime endDate, string managerId, string codeClient)
         {
@@ -369,25 +402,34 @@ namespace CRM_Upack_kz.Controllers
             return applications;
         }
 
+        /// <summary>
+        /// Метод создает ексель файл, сначала происходит инициализация файла, далее задаётся ширина столбцов.
+        /// </summary>
+        /// <param name="applications">полученный список обращений</param>
         [NonAction]
         private void CreateExcelFile(List<Application> applications)
         {
             string file = Path.Combine(_environment.ContentRootPath, "wwwroot/Files/Выгрузка.xls"); 
             Workbook workbook = new Workbook();
             Worksheet worksheet = new Worksheet("Страница 1");
-            
-            for(int i = 0;i < 100; i++)
-                worksheet.Cells[i,0] = new Cell("");
-            
-            int count = 0;
-            foreach (var appl in applications)
+
+            List<string> headers = new List<string>() {"ОБРАЩЕНИЕ", "МЕНЕДЖЕР", "ДАТА СОЗДАНИЯ", "ОЖИДАЕТСЯ", "КОД КЛИЕНТА", "КЛИЕНТ", "АРТИКУЛ", "КОЛ-ВО", "ЦЕНА", "СУММА", "КОМ-ИЙ"};
+
+            for (int i = 0; i < 100; i++)
             {
-                for (int i = 0; i < 10; i++)
-                {
-                    worksheet.Cells.ColumnWidth[0, (ushort)i] = 5000;
-                }
-                
-                worksheet.Cells[count, 0] = new Cell("№: " + appl.NumberApplication);
+               worksheet.Cells[i,0] = new Cell("");
+               if (i < 11)
+               {
+                  worksheet.Cells.ColumnWidth[0, (ushort)i] = 5000;
+                  worksheet.Cells[0, i] = new Cell(headers[i]);
+               }
+            }
+
+
+            int count = 1;
+            foreach (var appl in applications.OrderByDescending(a => a.NumberApplication))
+            {
+                worksheet.Cells[count, 0] = new Cell("№ " + appl.NumberApplication);
                 worksheet.Cells[count, 1] = new Cell($"{appl.Manager.Surname} {appl.Manager.Name}");
                 worksheet.Cells[count, 2] = new Cell(appl.CreateDate.ToShortDateString() + "   " + appl.CreateDate.ToShortTimeString(), @"DD-MM-YYYY");
                 if (appl.WaitingDate != new DateTime(0001, 01, 01))
@@ -406,6 +448,201 @@ namespace CRM_Upack_kz.Controllers
 
             workbook.Worksheets.Add(worksheet);
             workbook.Save(file);
+        }
+        
+        /// <summary>
+        /// Метод для сортировки обращений.
+        /// </summary>
+        /// <param name="sort">способ сортировки</param>
+        /// <returns></returns>
+        [NonAction]
+        private List<Application> GetSortApplications(AppSort sort, string userId)
+        {
+            ViewBag.NumAppl = sort == AppSort.NumApplAsc ? AppSort.NumApplDesc : AppSort.NumApplAsc;
+            ViewBag.Manager = sort == AppSort.ManagerAsc ? AppSort.ManagerDesc : AppSort.ManagerAsc;
+            ViewBag.CreateDate = sort == AppSort.CreateDateAsc ? AppSort.CreateDateDesc : AppSort.CreateDateAsc;
+            ViewBag.CodeClient = sort == AppSort.CodeClientAsc ? AppSort.CodeClientDesc : AppSort.CodeClientAsc;
+            ViewBag.NameClient = sort == AppSort.NameClientAsc ? AppSort.NameClientDesc : AppSort.NameClientAsc;
+            ViewBag.ArtNum = sort == AppSort.ArtNumAsc ? AppSort.ArtNumDesc : AppSort.ArtNumAsc;
+            ViewBag.Quntity = sort == AppSort.QuntityAsc ? AppSort.QuntityDesc : AppSort.QuntityAsc;
+            ViewBag.Price = sort == AppSort.PriceAsc ? AppSort.PriceDesc : AppSort.PriceAsc;
+            ViewBag.Amount = sort == AppSort.AmountAsc ? AppSort.AmountDesc : AppSort.AmountAsc;
+            
+            List<Application> applications = new List<Application>();
+            switch (sort)
+            {
+                case AppSort.NumApplAsc:
+                    applications = _db.Applications.OrderBy(c => c.NumberApplication).ToList();
+                    ViewBag.sort = AppSort.NumApplAsc;
+                    break;
+                
+                case AppSort.NumApplDesc:
+                    applications = _db.Applications.OrderByDescending(c => c.NumberApplication).ToList();
+                    ViewBag.sort = AppSort.NumApplDesc;
+                    break;
+
+                case AppSort.ManagerAsc:
+                    applications = _db.Applications.OrderBy(c => c.Manager.Surname).ToList();
+                    ViewBag.sort = AppSort.ManagerAsc;
+                    break;
+
+                case AppSort.ManagerDesc:
+                    applications = _db.Applications.OrderByDescending(c => c.Manager.Surname).ToList();
+                    ViewBag.sort = AppSort.ManagerDesc;
+                    break;
+
+                case AppSort.CreateDateAsc:
+                    applications = _db.Applications.OrderBy(c => c.CreateDate).ToList();
+                    ViewBag.sort = AppSort.CreateDateAsc;
+                    break;
+
+                case AppSort.CreateDateDesc:
+                    applications = _db.Applications.OrderByDescending(c => c.CreateDate).ToList();
+                    ViewBag.sort = AppSort.CreateDateDesc;
+                    break;
+
+                case AppSort.CodeClientAsc:
+                    applications = _db.Applications.OrderBy(c => c.Client.CodeClient).ToList();
+                    ViewBag.sort = AppSort.CodeClientAsc;
+                    break;
+
+                case AppSort.CodeClientDesc:
+                    applications = _db.Applications.OrderByDescending(c => c.Client.CodeClient).ToList();
+                    ViewBag.sort = AppSort.CodeClientDesc;
+                    break;
+
+                case AppSort.NameClientAsc:
+                    applications = _db.Applications.OrderBy(c => c.Client.Title).ToList();
+                    ViewBag.sort = AppSort.NameClientAsc;
+                    break;
+
+                case AppSort.NameClientDesc:
+                    applications = _db.Applications.OrderByDescending(c => c.Client.Title).ToList();
+                    ViewBag.sort = AppSort.NameClientDesc;
+                    break;
+
+                case AppSort.ArtNumAsc:
+                    applications = _db.Applications.OrderBy(c => c.ArticleNumber).ToList();
+                    ViewBag.sort = AppSort.ArtNumAsc;
+                    break;
+
+                case AppSort.ArtNumDesc:
+                    applications = _db.Applications.OrderByDescending(c => c.ArticleNumber).ToList();
+                    ViewBag.sort = AppSort.ArtNumDesc;
+                    break;
+
+                case AppSort.QuntityAsc:
+                    applications = _db.Applications.OrderBy(c => c.Quantity).ToList();
+                    ViewBag.sort = AppSort.QuntityAsc;
+                    break;
+
+                case AppSort.QuntityDesc:
+                    applications = _db.Applications.OrderByDescending(c => c.Quantity).ToList();
+                    ViewBag.sort = AppSort.QuntityDesc;
+                    break;
+
+                case AppSort.PriceAsc:
+                    applications = _db.Applications.OrderBy(c => c.Price).ToList();
+                    ViewBag.sort = AppSort.PriceAsc;
+                    break;
+                
+                case AppSort.PriceDesc:
+                    applications = _db.Applications.OrderByDescending(c => c.Price).ToList();
+                    ViewBag.sort = AppSort.PriceDesc;
+                    break;
+                
+                case AppSort.AmountAsc:
+                    applications = _db.Applications.OrderBy(c => c.Amount).ToList();
+                    ViewBag.sort = AppSort.AmountAsc;
+                    break;
+                
+                case AppSort.AmountDesc:
+                    applications = _db.Applications.OrderByDescending(c => c.Amount).ToList();
+                    ViewBag.sort = AppSort.AmountDesc;
+                    break;
+            }
+
+            if (!String.IsNullOrEmpty(userId))
+            {
+                applications = applications.Where(a => a.Manager.Id == userId).OrderByDescending(a => a.NumberApplication).ToList();
+            }
+
+            return applications;
+        }
+
+        /// <summary>
+        /// Метод для поиска информации с различными способами поиска
+        /// </summary>
+        /// <param name="find">искомый параметр</param>
+        /// <returns></returns>
+        [NonAction]
+        private List<Application> FindResult(string find)
+        {
+            List<Application> applications = new List<Application>();
+            
+            if (!string.IsNullOrEmpty(find))
+            {
+                // жесткий поиск по номеру обращения
+                applications = _db.Applications.Where(a => a.NumberApplication.ToString() == find.Trim()).ToList();
+                
+                // поиск по id менеджера
+                if (applications.Any() == false)
+                {
+                    applications = _db.Applications.Where(a => a.Manager.Id == find & a.AppState == AppState.Новая).ToList();
+                }
+
+                // жесткий поиск по фамилии, имени, коду клиента
+                if (applications.Any() == false)
+                {
+                    applications = _db.Applications
+                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Surname.ToLower()))
+                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Name.ToLower()))
+                        .Where(a => find.ToUpper().Trim().Contains(a.Client.CodeClient)).ToList();
+                }
+                
+                // жесткий поиск по фамилии, имени, названию клиента
+                if (applications.Any() == false)
+                {
+                    applications = _db.Applications
+                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Surname.ToLower()))
+                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Name.ToLower()))
+                        .Where(a => find.ToUpper().Trim().Contains(a.Client.Title)).ToList();
+                }
+                
+                // жесткий поиск по фамилии и коду клиента
+                if (applications.Any() == false)
+                {
+                    applications = _db.Applications
+                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Surname.ToLower()))
+                        .Where(a => find.ToUpper().Trim().Contains(a.Client.CodeClient)).ToList();
+                }
+
+                // 1 способ, мягкий поиск
+                if (applications.Any() == false)
+                {
+                    applications = _db.Applications.Where(a =>
+                        find.ToLower().Contains(a.Manager.Surname.ToLower()) ||
+                        find.ToLower().Contains(a.Manager.Name.ToLower()) ||
+                        find.ToLower().Contains(a.NumberApplication.ToString().ToLower()) ||
+                        find.ToLower().Contains(a.Client.Title.ToLower()) ||
+                        find.ToUpper().Contains(a.Client.CodeClient)).ToList();
+                }
+
+                // 2 способ, мягкий поиск
+                if (applications.Any() == false)
+                {
+                    applications = _db.Applications.Where(a => 
+                        a.Manager.Surname.ToLower().Contains(find.ToLower().Trim()) ||
+                        a.Manager.Name.ToLower().Contains(find.ToLower().Trim()) || 
+                        a.NumberApplication.ToString().ToLower().Contains(find.ToLower().Trim()) ||
+                        a.Client.Title.ToLower().Contains(find.ToLower().Trim()) ||
+                        a.Client.CodeClient.Contains(find.ToUpper().Trim())).ToList();
+                }
+
+                return applications;
+            }
+
+            return applications;
         }
     }
 }

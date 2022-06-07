@@ -5,15 +5,16 @@
     Layout = "_Layout";
 }
 
+<div id="BaseBody" class="text-center col col-sm-3 col-md-4 col-lg-12"></div>
 @if (ViewBag.StateAppl == AppState.Закрыта)
 {
-    <div class="col-md-4 pt-3 pb-4 ">
+    <div class="baseElement col-md-4 pt-3 pb-4 ">
         <h4>Данное обращение было закрыто</h4>
     </div>
 }
 else if (ViewBag.StateAppl == AppState.Ожидается)
 {
-    <div class="card mb-3" style="max-width: 540px;">
+    <div class="baseElement card mb-3" style="max-width: 540px;">
       <div class="row g-0 shadow">
         <div class="col-md-4">
           <img src="..\..\/Images/Warning/warning.png" class="img-fluid rounded-start" alt="...">
@@ -30,7 +31,7 @@ else if (ViewBag.StateAppl == AppState.Ожидается)
 }
 else
 {
-    <div class="col-md-4 pt-3 pb-4 ">
+    <div class="baseElement col-md-4 pt-3 pb-4 ">
         <h4>Заполните поля</h4>
         <form asp-action="Edit" asp-controller="Applications" method="post" asp-route-applId="@ViewBag.ApplId" enctype="multipart/form-data">
             @{

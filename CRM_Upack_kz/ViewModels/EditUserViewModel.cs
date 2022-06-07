@@ -31,6 +31,10 @@ namespace CRM_Upack_kz.ViewModels
         [MaxLength (12, ErrorMessage = "Максимальная длина номера не может быть больше 12 символов")]
         [MinLength(3, ErrorMessage = "Минимальная длина номера должена быть не меньше 3 символов")]
         public string PhoneNumber { get; set; }
+        
+        [Display(Name = "Укажите роль пользователя")]
+        [Required(ErrorMessage = "Укажите роль это поле обязательно для заполнения")]
+        public string Role { get; set; }
 
         public string AvatarPath { get; set; }
         public IFormFile File { get; set; }

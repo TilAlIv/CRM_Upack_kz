@@ -34,7 +34,7 @@ namespace CRM_Upack_kz.Jobs
                         {
                             if (app.Manager.Id == manager.Id && app.WaitingDate.ToShortDateString() == DateTime.Now.ToShortDateString())
                             {
-                                text += $"№: <b>{app.NumberApplication}</b>" +
+                                text += $"№:</span> <b>{app.NumberApplication}</b> &nbsp;" +
                                         $"Вы: <b>{app.Manager.Surname} {app.Manager.Name}</b> &nbsp;" +
                                         $"Дата создания: <b>{app.CreateDate.ToShortDateString()}</b> &nbsp;" +
                                         $"Дата ожидания: <b>{app.WaitingDate.ToShortDateString()}</b> &nbsp;" +

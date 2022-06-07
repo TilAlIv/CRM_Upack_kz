@@ -7,6 +7,10 @@ namespace CRM_Upack_kz.Jobs
 {
     public class DataScheduler
     {
+        /// <summary>
+        /// Источник реализации Quartz NET: https://habr.com/ru/post/486678/
+        /// </summary>
+        /// <param name="serviceProvider">передаются сервисы прямо в метод.</param>
         public static async void Start(IServiceProvider serviceProvider)
         {
             IScheduler scheduler = await StdSchedulerFactory.GetDefaultScheduler();

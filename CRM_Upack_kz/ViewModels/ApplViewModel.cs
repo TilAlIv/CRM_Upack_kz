@@ -22,7 +22,7 @@ namespace CRM_Upack_kz.ViewModels
         [DataType(DataType.Text, ErrorMessage = "Вы вводите не текст")]
         [MaxLength(10, ErrorMessage = "Укажите меньше 10 символов")]
         [MinLength(3, ErrorMessage = "Укажите больше 3 символов")]
-        [Display(Name = "Артикул")]
+        [Display(Name = "Артикул товара")]
         public string ArticleNumber { get; set; }
         
         [Required(ErrorMessage = "Это поле обязательно")]
@@ -30,7 +30,7 @@ namespace CRM_Upack_kz.ViewModels
         public int Quantity { get; set; }
         
         [Required(ErrorMessage = "Это поле обязательно")]
-        [Display(Name = "Цена")]
+        [Display(Name = "Цена за единицу")]
         public double Price { get; set; }
         
         [MaxLength(250, ErrorMessage = "Укажите меньше 10 символов")]

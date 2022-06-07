@@ -1,5 +1,4 @@
-﻿
-@using CRM_Upack_kz.ViewModels
+﻿@using CRM_Upack_kz.ViewModels
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model CRM_Upack_kz.ViewModels.RegisterViewModel
 
@@ -7,8 +6,9 @@
     ViewBag.Title = "Регистрация";
     Layout = "_Layout";
 }
+<div id="BaseBody" class="text-center col col-sm-3 col-md-4 col-lg-12"></div>
 
-<div class="col-md-4 pt-3 pb-4">
+<div class="baseElement col-md-4 pt-3 pb-4">
     <h2>Регистрация пользователя</h2>
     <form asp-action="Register" asp-controller="Account" method="post" enctype="multipart/form-data">
         @{ 

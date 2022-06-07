@@ -1,0 +1,108 @@
+﻿@using CRM_Upack_kz.Enums
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model List<Application>
+
+@if (Model.Any() == false)
+{
+  <h2>Результаты не найдены</h2>
+}
+else
+{
+  <table class="table table-hover">
+    <thead class="table-light">
+    <tr>
+      <th scope="col" class="font"><a class="" asp-action="Index" asp-route-sort="@ViewBag.NumAppl"><span class="badge bg-info">№</span></a></th>
+      <th scope="col" class="font"><a class=""  asp-action="Index" asp-route-sort="@ViewBag.Manager"><span class="badge bg-secondary">Менеджер</span></a></th>
+      <th scope="col" class="font"><a class=""  asp-action="Index" asp-route-sort="@ViewBag.CreateDate"><span class="badge bg-secondary">Дата создания</span></a></th>
+      <th scope="col" class="font">Ожидается</th>
+      <th scope="col" class="font"><a asp-action="Index" asp-route-sort="@ViewBag.CodeClient"><span class="badge bg-secondary">Код клиента</span></a></th>
+      <th scope="col" class="font"><a asp-action="Index" asp-route-sort="@ViewBag.NameClient"><span class="badge bg-secondary">Клиент</span></a></th>
+      <th scope="col" class="font"><a asp-action="Index" asp-route-sort="@ViewBag.ArtNum"><span class="badge bg-secondary">Артикул</span></a></th>
+      <th scope="col" class="font"><a asp-action="Index" asp-route-sort="@ViewBag.Quntity"><span class="badge bg-secondary">Кол-во</span></a></th>
+      <th scope="col" class="font"><a asp-action="Index" asp-route-sort="@ViewBag.Price"><span class="badge bg-secondary">Цена</span></a></th>
+      <th scope="col" class="font"><a asp-action="Index" asp-route-sort="@ViewBag.Amount"><span class="badge bg-secondary">Сумма</span></a></th>
+      <th scope="col" class="font">Комментарий</th>
+      <th scope="col" class="font">Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    @{ 
+      foreach (var appl in Model)
+      {
+        <tr>
+          <td class="font text-dark"><b>@appl.NumberApplication</b></td>
+          <td class="font text-dark">@appl.Manager.Surname @appl.Manager.Name</td>
+          <td class="font text-dark">@appl.CreateDate.ToShortDateString() @appl.CreateDate.ToShortTimeString()</td>
+          <td class="font @if(appl.WaitingDate != new DateTime(0001, 01, 01)) 
+                          {
+                            @:text-success
+                          } 
+                          else
+                          { 
+                            @:text-danger
+                          }
+                         ">
+            @if (appl.WaitingDate != new DateTime(0001, 01, 01))
+            {
+              <b>@appl.WaitingDate.ToShortDateString()</b>
+            }
+            else
+            {
+              @:Дата не указана
+            }
+          </td>
+          <td class="font text-dark">@appl.Client.CodeClient</td>
+          <td class="font text-dark">@appl.Client.Title</td>
+          <td class="font text-dark">@appl.ArticleNumber</td>
+          <td class="font text-dark">@appl.Quantity</td>
+          <td class="font text-dark">@appl.Price</td>
+          <td class="font text-dark">@appl.Amount</td>
+          <td class="font text-dark">@appl.Comment</td>
+          <td>
+            <div class="btn-group btn-group-sm shadow" role="group" aria-label="Button group with nested dropdown">
+              @if (appl.AppState == AppState.Новая & (User.Identity.Name == appl.Manager.Email || User.IsInRole("admin") || User.IsInRole("merch")))
+                {
+                  if (User.IsInRole("admin") || User.IsInRole("merch"))
+                  {
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
+                  }
+                  if (User.IsInRole("admin") || User.Identity.Name == appl.Manager.Email)
+                  {
+                    <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                    <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                  }
+                }
+
+                else if (appl.AppState == AppState.Ожидается & (User.Identity.Name == appl.Manager.Email || User.IsInRole("admin") || User.IsInRole("merch")))
+                {
+                  if (User.IsInRole("admin") || User.IsInRole("merch"))
+                  {
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
+                    @if (User.IsInRole("admin"))
+                    {
+                      <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                      <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                    }
+                  }
+                }
+
+                else if (appl.AppState == AppState.Закрыта & User.IsInRole("admin"))
+                {
+                  <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
+                  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
+                  <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                  <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                }
+                
+                else if (appl.AppState == AppState.Закрыта)
+                {
+                  <button type="button" class="btn btn-outline-success" disabled>Закрыто</button>
+                }
+            </div>
+          </td>
+        </tr>
+      }
+    }
+    </tbody>
+  </table>
+}
