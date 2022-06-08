@@ -47,16 +47,23 @@ namespace CRM_Upack_kz.Controllers
             _iLogger = iLogger;
         }
         
+        /// <summary>
+        /// Стартовая страница по отображению списком всех обращений
+        /// </summary>
+        /// <param name="page">выбраный пользователем номер страницы на странице</param>
+        /// <param name="userId">id пользователя, необходим для фильтрации списка обращений созданных данным пользователем</param>
+        /// <param name="sort">способ сортировки</param>
+        /// <returns>возвращает отсортирований список обращений</returns>
         [HttpGet]
         public IActionResult Index(int? page, string userId, AppSort sort = AppSort.NumApplDesc)
         {
             try
             {
                 List<Application> applications = GetSortApplications(sort, userId);
-                
                 int pageSize = 13;
                 int pageNumber = page ?? 1;
                 return View(applications.ToPagedList(pageNumber, pageSize));
+                
             }
             catch (Exception e)
             {
@@ -65,6 +72,10 @@ namespace CRM_Upack_kz.Controllers
             }
         }
 
+        /// <summary>
+        /// Экшн по предварительному созданию нового обращения
+        /// </summary>
+        /// <returns>возвращает предварительную страницу создания нового обращения</returns>
         [HttpGet]
         public IActionResult Create()
         {
@@ -75,11 +86,16 @@ namespace CRM_Upack_kz.Controllers
             }
             catch (Exception e)
             {
-                _nLogger.Error($"Внимание ошибка: {e.TargetSite}: {e.Message} | {e.StackTrace}");
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
                 return NotFound();
             }
         }
         
+        /// <summary>
+        /// Экшн для создания нового обращения
+        /// </summary>
+        /// <param name="model">контейнер с данными со страницы</param>
+        /// <returns>в случае положительного результата при создании нового обращения, пользователь будет перенапрвлен на стартовую страницу, в список всех обращений</returns>
         [HttpPost]
         public async Task<IActionResult> Create(ApplViewModel model)
         {
@@ -100,37 +116,56 @@ namespace CRM_Upack_kz.Controllers
             }
             catch (Exception e)
             {
-                _nLogger.Error($"Внимание ошибка: {e.TargetSite}: {e.Message} | {e.StackTrace}");
-                return Content($"Внимание ошибка: {e.TargetSite}: {e.Message} | {e.StackTrace}");
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return NotFound();
             }
         }
 
+        /// <summary>
+        /// Экшн по предварительному редактированию существующего обращения
+        /// </summary>
+        /// <param name="id">id для поиска нужного обращения</param>
+        /// <returns>возвращает предварительную страницу редактирования нового обращения</returns>
         [HttpGet]
         public IActionResult Edit(string id)
         {
-            if (id != null)
+            try
             {
-                Application appl = _db.Applications.FirstOrDefault(a => a.Id == id);
-                if (appl != null)
+                if (id != null)
                 {
-                    ApplViewModel model = new ApplViewModel()
+                    Application appl = _db.Applications.FirstOrDefault(a => a.Id == id);
+                    if (appl != null)
                     {
-                        CodeClient = appl.Client.CodeClient,
-                        NameClient = appl.Client.Title,
-                        ArticleNumber = appl.ArticleNumber,
-                        Quantity = (int)appl.Quantity,
-                        Price = appl.Price,
-                        Comment = appl.Comment
-                    };
-                    ViewBag.ApplId = appl.Id;
-                    ViewBag.StateAppl = appl.AppState;
-                    return View(model);
+                        ApplViewModel model = new ApplViewModel()
+                        {
+                            CodeClient = appl.Client.CodeClient,
+                            NameClient = appl.Client.Title,
+                            ArticleNumber = appl.ArticleNumber,
+                            Quantity = (int)appl.Quantity,
+                            Price = appl.Price,
+                            Comment = appl.Comment
+                        };
+                        ViewBag.ApplId = appl.Id;
+                        ViewBag.StateAppl = appl.AppState;
+                        return View(model);
+                    }
+                    return Content("Не найдено обращение");
                 }
-                return Content("Не найдено обращение");
+                return Content("Неверный Id");
             }
-            return Content("Неверный Id");
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return NotFound();
+            }
         }
 
+        /// <summary>
+        /// Экшн по редактированию существующего обращения.
+        /// </summary>
+        /// <param name="model">контейнер с данными</param>
+        /// <param name="applId">id обращения, вынесен отдельно из контейнера model из-за валидации</param>
+        /// <returns>в случае положительного обновления обращения, пользователь будет перенаправлен на стартовую страницу всех обращений.</returns>
         [HttpPost]
         public async Task<IActionResult> Edit(ApplViewModel model, string applId)
         {
@@ -165,108 +200,176 @@ namespace CRM_Upack_kz.Controllers
             }
             catch (Exception e)
             {
-                _nLogger.Error($"Внимание ошибка: {e.TargetSite}: {e.Message} | {e.StackTrace}");
-                return Content($"Внимание ошибка: {e.TargetSite}: {e.Message} | {e.StackTrace}");
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return NotFound();
             }
         }
 
+        /// <summary>
+        /// Экшн для изменения даты ожидания и смене статуса обращения
+        /// </summary>
+        /// <param name="applId">id обращения</param>
+        /// <param name="date">указанная дата пользователем на странице</param>
+        /// <param name="comment">оставленный комментарий</param>
+        /// <param name="state">передаваемый статус</param>
+        /// <returns>в случае положительного обновления обращения, пользователь будет перенапровлен на стартовую страницу всех обращений</returns>
         [HttpPost]
         public IActionResult ChangeDateWaite(string applId, DateTime date, string comment, string state)
         {
-            if (applId != null)
+            try
             {
-                Application appl = _db.Applications.FirstOrDefault(a => a.Id == applId);
-                if (appl != null)
+                if (applId != null)
                 {
-                    switch (state)
+                    Application appl = _db.Applications.FirstOrDefault(a => a.Id == applId);
+                    if (appl != null)
                     {
-                        case "Новая":
-                            appl.AppState = AppState.Ожидается;
-                            break;
+                        switch (state)
+                        {
+                            case "Новая":
+                                appl.AppState = AppState.Ожидается;
+                                break;
+                            
+                            case "Ожидается":
+                                appl.AppState = AppState.Закрыта;
+                                break;
+                            
+                            case "Закрыта":
+                                return Content("Данное обращение было успешно закрыто");
+                        }
                         
-                        case "Ожидается":
-                            appl.AppState = AppState.Закрыта;
-                            break;
+                        appl.WaitingDate = date;
+                        appl.Comment = comment;
                         
-                        case "Закрыта":
-                            return Content("Данное обращение было успешно закрыто");
+                        _db.Applications.Update(appl);
+                        _db.SaveChanges();
+                        
+                        return RedirectToAction("Index");
                     }
                     
-                    appl.WaitingDate = date;
-                    appl.Comment = comment;
-                    
-                    _db.Applications.Update(appl);
-                    _db.SaveChanges();
-                    
-                    return RedirectToAction("Index");
+                    return Content("По указанному Id не найдено обращения");
                 }
                 
-                return Content("По указанному Id не найдено обращения");
+                return Content("Не найдено Id обращения");
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return NotFound();
             }
             
-            return Content("Не найдено Id обращения");
         }
-        
-        
+
+        /// <summary>
+        /// Экшн для перенаправления на предварительную форму для удаления 
+        /// </summary>
+        /// <param name="id">входной парметр для поиска обращения по id</param>
+        /// <returns>возвращает предварительную страницу для удаления</returns>
         [HttpGet]
         public async Task<IActionResult> ConfirmDelete(string id)
         {
-            if (id != null)
+            try
             {
-                Application appl = await _db.Applications.FirstOrDefaultAsync(a => a.Id == id);
-                if (appl != null)
+                if (id != null)
                 {
-                    return View(appl);
+                    Application appl = await _db.Applications.FirstOrDefaultAsync(a => a.Id == id);
+                    if (appl != null)
+                    {
+                        return View(appl);
+                    }
+                    return Content("Данное обращение не найденно");
                 }
-                return Content("Данное обращение не найденно");
+                return Content("Неверный Id");
             }
-            return Content("Неверный Id");
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
         
+        /// <summary>
+        /// Экшн по удалению обращения 
+        /// </summary>
+        /// <param name="id">id самого обращения которое необходимо удалить</param>
+        /// <returns>если процес прошел удачно, то пользователь будет перенаправлен на главную страницу обращений</returns>
         [HttpPost]
         public async Task<IActionResult> Delete(string id)
         {
-            if (id != null)
-            {
-                Application appl = await _db.Applications.FirstOrDefaultAsync(a => a.Id == id);
-                if (appl != null)
+            try
+            { 
+                if (id != null)
                 {
-                    _db.Entry(appl).State = EntityState.Deleted;
-                    await _db.SaveChangesAsync();
-                    return RedirectToAction("Index");
+                    Application appl = await _db.Applications.FirstOrDefaultAsync(a => a.Id == id);
+                    if (appl != null)
+                    {
+                        _db.Entry(appl).State = EntityState.Deleted;
+                        await _db.SaveChangesAsync();
+                        return RedirectToAction("Index");
+                    }
+                    return Content("Данное обращение не найденно");
                 }
-                return Content("Данное обращение не найденно");
+                return Content("Неверный Id");
             }
-            return Content("Неверный Id");
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return NotFound();
+            }
+           
         }
 
+        /// <summary>
+        /// Экшн для аякс запросов по получению информации о клиенте. Используется при создании нового обращения.
+        /// </summary>
+        /// <param name="codeClient">код клиента по которому происходит поиск самого клиента </param>
+        /// <returns>возвращает имя клиента</returns>
         [HttpGet]
         [AllowAnonymous]
         public async Task<IActionResult> GetInfoClientAjax(string codeClient)
         {
-          var client = await _db.Clients.FirstOrDefaultAsync(c => c.CodeClient == codeClient);
-          if (client != null)
-          {
-              return Content(client.Title);
-          }
+            try
+            { 
+                var client = await _db.Clients.FirstOrDefaultAsync(c => c.CodeClient == codeClient);
+                if (client != null)
+                {
+                    return Content(client.Title);
+                }
+                
+                return Content("Клиент не найден, заполните клиента");
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return NotFound();
+            }
 
-          return Content("Клиент не найден, заполните клиента");
+            
         }
         
         /// <summary>
         /// Экшн по поиску информации в обращениях
         /// </summary>
         /// <param name="find">искомый параметр</param>
-        /// <returns></returns>
+        /// <returns>возращает частичное представление с отфильрованным и отсортированным списком обращений</returns>
         [HttpGet]
         public IActionResult Find(string find)
         {
-            if (!string.IsNullOrEmpty(find))
+            try
             {
-                return PartialView("PartialViews/GetFindResultPartialView", FindResult(find).OrderByDescending(a => a.NumberApplication).ToList());
-            }
+                if (!string.IsNullOrEmpty(find))
+                {
+                    return PartialView("PartialViews/GetFindResultPartialView", FindResult(find).OrderByDescending(a => a.NumberApplication).ToList());
+                }
 
-            return Content("null");
+                return Content("null");
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
         
         /// <summary>
@@ -278,27 +381,35 @@ namespace CRM_Upack_kz.Controllers
         [NonAction]
         private void SaveApplication(User manager, Client client, ApplViewModel model)
         {
-            Application application = new Application()
+            try
             {
-                ManagerId = manager.Id,
-                Manager = manager,
-                ClientId = client.Id,
-                Client = client,
-                Price = model.Price,
-                Quantity = model.Quantity,
-                Comment = model.Comment,
-                ArticleNumber = model.ArticleNumber.ToUpper(),
-                CreateDate = DateTime.Now,
-                Amount = model.Price * model.Quantity,
-                NumberApplication = _db.CountApplications.Count() + 1
-            };
-            _db.CountApplications.Add(new CountApplication());
-            _db.Applications.Add(application);
-            _db.SaveChanges();
+                Application application = new Application()
+                {
+                    ManagerId = manager.Id,
+                    Manager = manager,
+                    ClientId = client.Id,
+                    Client = client,
+                    Price = model.Price,
+                    Quantity = model.Quantity,
+                    Comment = model.Comment,
+                    ArticleNumber = model.ArticleNumber.ToUpper(),
+                    CreateDate = DateTime.Now,
+                    Amount = model.Price * model.Quantity,
+                    NumberApplication = _db.CountApplications.Count() + 1
+                };
+                _db.CountApplications.Add(new CountApplication());
+                _db.Applications.Add(application);
+                _db.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+            }
+            
         } 
         
         /// <summary>
-        /// Обновление обращения при редактировании
+        /// Обновление обращения при редактировании. Также меняется информация о самом клиенте если были сделаны изменения.
         /// </summary>
         /// <param name="appl">само обращение</param>
         /// <param name="client">клиент</param>
@@ -306,20 +417,28 @@ namespace CRM_Upack_kz.Controllers
         [NonAction]
         private void UpdateApplication(Application appl, Client client, ApplViewModel model)
         {
-            client.Title = model.NameClient;
-            client.CodeClient = model.CodeClient;
-            
-            appl.Client = client;
-            appl.ClientId = client.Id;
-            appl.ArticleNumber = model.ArticleNumber.ToUpper();
-            appl.Comment = model.Comment;
-            appl.Price = model.Price;
-            appl.Quantity = model.Quantity;
-            appl.Amount = model.Price * model.Quantity;
+            try
+            {
+                client.Title = model.NameClient;
+                client.CodeClient = model.CodeClient;
+                
+                appl.Client = client;
+                appl.ClientId = client.Id;
+                appl.ArticleNumber = model.ArticleNumber.ToUpper();
+                appl.Comment = model.Comment;
+                appl.Price = model.Price;
+                appl.Quantity = model.Quantity;
+                appl.Amount = model.Price * model.Quantity;
 
-            _db.Clients.Update(client);
-            _db.Applications.Update(appl);
-            _db.SaveChanges();
+                _db.Clients.Update(client);
+                _db.Applications.Update(appl);
+                _db.SaveChanges();
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+            }
+            
         }
 
         /// <summary>
@@ -332,17 +451,25 @@ namespace CRM_Upack_kz.Controllers
         [NonAction]
         private void CheckClient(User manager, Client client, ApplViewModel model)
         {
-            if (client != null)
+            try
             {
-                SaveApplication(manager, client, model);
+                if (client != null)
+                {
+                    SaveApplication(manager, client, model);
+                }
+                else
+                {
+                    Client newClient = new Client() {CodeClient = model.CodeClient.ToUpper(), Title = model.NameClient};
+                    _db.Clients.Add(newClient);
+                    _db.SaveChanges();
+                    SaveApplication(manager, newClient, model);
+                }
             }
-            else
+            catch (Exception e)
             {
-                Client newClient = new Client() {CodeClient = model.CodeClient.ToUpper(), Title = model.NameClient};
-                _db.Clients.Add(newClient);
-                _db.SaveChanges();
-                SaveApplication(manager, newClient, model);
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
             }
+            
         }
         
         /// <summary>
@@ -352,14 +479,24 @@ namespace CRM_Upack_kz.Controllers
         /// <param name="endDate">конечная дата</param>
         /// <param name="managerId">передаваемый id менеджера</param>
         /// <param name="codeClient">передаваемый код клиента</param>
-        /// <returns></returns>
+        /// <returns>Возращает сгенерированный ексель файл</returns>
         public VirtualFileResult GetVirtualFile(DateTime startDate, DateTime endDate, string managerId, string codeClient)
         {
-            List<Application> applications = FilterApplications(startDate, endDate, managerId, codeClient);
-            CreateExcelFile(applications);
+            try
+            {
+                List<Application> applications = FilterApplications(startDate, endDate, managerId, codeClient);
+                CreateExcelFile(applications);
+                
+                var filepath = Path.Combine("~/Files", "Выгрузка.xls");
+                return File(filepath, "text/plain", "Выгрузка.xls");
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return null;
+                
+            }
             
-            var filepath = Path.Combine("~/Files", "Выгрузка.xls");
-            return File(filepath, "text/plain", "Выгрузка.xls");
         }
 
         /// <summary>
@@ -369,38 +506,48 @@ namespace CRM_Upack_kz.Controllers
         /// <param name="endDate">Конечная дата, если эта дата не указана польз-ем необходимо установить текущюю дату и время + 1 день включительно</param>
         /// <param name="managerId">id менеджера</param>
         /// <param name="codeClient">код клиента</param>
-        /// <returns></returns>
+        /// <returns>возращает отфильтрованный и отсартированный список обращений</returns>
         [NonAction]
         private List<Application> FilterApplications(DateTime startDate, DateTime endDate, string managerId, string codeClient)
         {
-            List<Application> applications = new List<Application>();
-            endDate = endDate == new DateTime(0001, 01, 01) ? DateTime.Now : endDate;
+            try
+            {
+                List<Application> applications = new List<Application>();
+                endDate = endDate == new DateTime(0001, 01, 01) ? DateTime.Now : endDate;
+                
+                if (managerId != null & codeClient == null)
+                {
+                    applications = _db.Applications
+                        .Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate)
+                        .Where(a => a.Manager.Id == managerId).ToList();
+                }
+                else if (managerId == null & codeClient != null)
+                {
+                    applications = _db.Applications
+                        .Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate)
+                        .Where(a => a.Client.CodeClient == codeClient).ToList();
+                }
+                else if(managerId != null & codeClient != null)
+                {
+                    applications = _db.Applications
+                        .Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate)
+                        .Where(a => a.Manager.Id == managerId)
+                        .Where(a => a.Client.CodeClient == codeClient).ToList();
+                }
+                else
+                {
+                    applications = _db.Applications.Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate).ToList();
+                }
+                
+                return applications;
+                
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return null;
+            }
             
-            if (managerId != null & codeClient == null)
-            {
-                applications = _db.Applications
-                    .Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate)
-                    .Where(a => a.Manager.Id == managerId).ToList();
-            }
-            else if (managerId == null & codeClient != null)
-            {
-                applications = _db.Applications
-                    .Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate)
-                    .Where(a => a.Client.CodeClient == codeClient).ToList();
-            }
-            else if(managerId != null & codeClient != null)
-            {
-                applications = _db.Applications
-                    .Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate)
-                    .Where(a => a.Manager.Id == managerId)
-                    .Where(a => a.Client.CodeClient == codeClient).ToList();
-            }
-            else
-            {
-                applications = _db.Applications.Where(a => a.CreateDate >= startDate && endDate.AddDays(1) >= a.CreateDate).ToList();
-            }
-            
-            return applications;
         }
 
         /// <summary>
@@ -410,240 +557,264 @@ namespace CRM_Upack_kz.Controllers
         [NonAction]
         private void CreateExcelFile(List<Application> applications)
         {
-            string file = Path.Combine(_environment.ContentRootPath, "wwwroot/Files/Выгрузка.xls"); 
-            Workbook workbook = new Workbook();
-            Worksheet worksheet = new Worksheet("Страница 1");
-
-            List<string> headers = new List<string>() {"ОБРАЩЕНИЕ", "МЕНЕДЖЕР", "ДАТА СОЗДАНИЯ", "ОЖИДАЕТСЯ", "КОД КЛИЕНТА", "КЛИЕНТ", "АРТИКУЛ", "КОЛ-ВО", "ЦЕНА", "СУММА", "КОМ-ИЙ"};
-
-            for (int i = 0; i < 100; i++)
+            try
             {
-               worksheet.Cells[i,0] = new Cell("");
-               if (i < 11)
-               {
-                  worksheet.Cells.ColumnWidth[0, (ushort)i] = 5000;
-                  worksheet.Cells[0, i] = new Cell(headers[i]);
-               }
-            }
-
-
-            int count = 1;
-            foreach (var appl in applications.OrderByDescending(a => a.NumberApplication))
-            {
-                worksheet.Cells[count, 0] = new Cell("№ " + appl.NumberApplication);
-                worksheet.Cells[count, 1] = new Cell($"{appl.Manager.Surname} {appl.Manager.Name}");
-                worksheet.Cells[count, 2] = new Cell(appl.CreateDate.ToShortDateString() + "   " + appl.CreateDate.ToShortTimeString(), @"DD-MM-YYYY");
-                if (appl.WaitingDate != new DateTime(0001, 01, 01))
+                string file = Path.Combine(_environment.ContentRootPath, "wwwroot/Files/Выгрузка.xls"); 
+                Workbook workbook = new Workbook();
+                Worksheet worksheet = new Worksheet("Страница 1");
+    
+                List<string> headers = new List<string>() {"ОБРАЩЕНИЕ", "МЕНЕДЖЕР", "ДАТА СОЗДАНИЯ", "ОЖИДАЕТСЯ", "КОД КЛИЕНТА", "КЛИЕНТ", "АРТИКУЛ", "КОЛ-ВО", "ЦЕНА", "СУММА", "КОМ-ИЙ"};
+    
+                for (int i = 0; i < 100; i++)
                 {
-                    worksheet.Cells[count, 3] = new Cell(appl.WaitingDate.ToShortDateString(), @"DD-MM-YYYY");
+                   worksheet.Cells[i,0] = new Cell("");
+                   if (i < 11)
+                   {
+                      worksheet.Cells.ColumnWidth[0, (ushort)i] = 5000;
+                      worksheet.Cells[0, i] = new Cell(headers[i]);
+                   }
                 }
-                worksheet.Cells[count, 4] = new Cell(appl.Client.CodeClient);
-                worksheet.Cells[count, 5] = new Cell(appl.Client.Title);
-                worksheet.Cells[count, 6] = new Cell(appl.ArticleNumber);
-                worksheet.Cells[count, 7] = new Cell(appl.Quantity);
-                worksheet.Cells[count, 8] = new Cell(appl.Price);
-                worksheet.Cells[count, 9] = new Cell(appl.Amount);
-                worksheet.Cells[count, 10] = new Cell(appl.Comment);
-                count++;
-            }
 
-            workbook.Worksheets.Add(worksheet);
-            workbook.Save(file);
+                int count = 1;
+                foreach (var appl in applications.OrderByDescending(a => a.NumberApplication))
+                {
+                    worksheet.Cells[count, 0] = new Cell("№ " + appl.NumberApplication);
+                    worksheet.Cells[count, 1] = new Cell($"{appl.Manager.Surname} {appl.Manager.Name}");
+                    worksheet.Cells[count, 2] = new Cell(appl.CreateDate.ToShortDateString() + "   " + appl.CreateDate.ToShortTimeString(), @"DD-MM-YYYY");
+                    if (appl.WaitingDate != new DateTime(0001, 01, 01))
+                    {
+                        worksheet.Cells[count, 3] = new Cell(appl.WaitingDate.ToShortDateString(), @"DD-MM-YYYY");
+                    }
+                    worksheet.Cells[count, 4] = new Cell(appl.Client.CodeClient);
+                    worksheet.Cells[count, 5] = new Cell(appl.Client.Title);
+                    worksheet.Cells[count, 6] = new Cell(appl.ArticleNumber);
+                    worksheet.Cells[count, 7] = new Cell(appl.Quantity);
+                    worksheet.Cells[count, 8] = new Cell(appl.Price);
+                    worksheet.Cells[count, 9] = new Cell(appl.Amount);
+                    worksheet.Cells[count, 10] = new Cell(appl.Comment);
+                    count++;
+                }
+    
+                workbook.Worksheets.Add(worksheet);
+                workbook.Save(file);
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+            }
+            
         }
         
         /// <summary>
         /// Метод для сортировки обращений.
         /// </summary>
         /// <param name="sort">способ сортировки</param>
-        /// <returns></returns>
+        /// <returns>возращает отсартированный список обращений</returns>
         [NonAction]
         private List<Application> GetSortApplications(AppSort sort, string userId)
         {
-            ViewBag.NumAppl = sort == AppSort.NumApplAsc ? AppSort.NumApplDesc : AppSort.NumApplAsc;
-            ViewBag.Manager = sort == AppSort.ManagerAsc ? AppSort.ManagerDesc : AppSort.ManagerAsc;
-            ViewBag.CreateDate = sort == AppSort.CreateDateAsc ? AppSort.CreateDateDesc : AppSort.CreateDateAsc;
-            ViewBag.CodeClient = sort == AppSort.CodeClientAsc ? AppSort.CodeClientDesc : AppSort.CodeClientAsc;
-            ViewBag.NameClient = sort == AppSort.NameClientAsc ? AppSort.NameClientDesc : AppSort.NameClientAsc;
-            ViewBag.ArtNum = sort == AppSort.ArtNumAsc ? AppSort.ArtNumDesc : AppSort.ArtNumAsc;
-            ViewBag.Quntity = sort == AppSort.QuntityAsc ? AppSort.QuntityDesc : AppSort.QuntityAsc;
-            ViewBag.Price = sort == AppSort.PriceAsc ? AppSort.PriceDesc : AppSort.PriceAsc;
-            ViewBag.Amount = sort == AppSort.AmountAsc ? AppSort.AmountDesc : AppSort.AmountAsc;
-            
-            List<Application> applications = new List<Application>();
-            switch (sort)
+            try
             {
-                case AppSort.NumApplAsc:
-                    applications = _db.Applications.OrderBy(c => c.NumberApplication).ToList();
-                    ViewBag.sort = AppSort.NumApplAsc;
-                    break;
+                ViewBag.NumAppl = sort == AppSort.NumApplAsc ? AppSort.NumApplDesc : AppSort.NumApplAsc;
+                ViewBag.Manager = sort == AppSort.ManagerAsc ? AppSort.ManagerDesc : AppSort.ManagerAsc;
+                ViewBag.CreateDate = sort == AppSort.CreateDateAsc ? AppSort.CreateDateDesc : AppSort.CreateDateAsc;
+                ViewBag.CodeClient = sort == AppSort.CodeClientAsc ? AppSort.CodeClientDesc : AppSort.CodeClientAsc;
+                ViewBag.NameClient = sort == AppSort.NameClientAsc ? AppSort.NameClientDesc : AppSort.NameClientAsc;
+                ViewBag.ArtNum = sort == AppSort.ArtNumAsc ? AppSort.ArtNumDesc : AppSort.ArtNumAsc;
+                ViewBag.Quntity = sort == AppSort.QuntityAsc ? AppSort.QuntityDesc : AppSort.QuntityAsc;
+                ViewBag.Price = sort == AppSort.PriceAsc ? AppSort.PriceDesc : AppSort.PriceAsc;
+                ViewBag.Amount = sort == AppSort.AmountAsc ? AppSort.AmountDesc : AppSort.AmountAsc;
                 
-                case AppSort.NumApplDesc:
-                    applications = _db.Applications.OrderByDescending(c => c.NumberApplication).ToList();
-                    ViewBag.sort = AppSort.NumApplDesc;
-                    break;
-
-                case AppSort.ManagerAsc:
-                    applications = _db.Applications.OrderBy(c => c.Manager.Surname).ToList();
-                    ViewBag.sort = AppSort.ManagerAsc;
-                    break;
-
-                case AppSort.ManagerDesc:
-                    applications = _db.Applications.OrderByDescending(c => c.Manager.Surname).ToList();
-                    ViewBag.sort = AppSort.ManagerDesc;
-                    break;
-
-                case AppSort.CreateDateAsc:
-                    applications = _db.Applications.OrderBy(c => c.CreateDate).ToList();
-                    ViewBag.sort = AppSort.CreateDateAsc;
-                    break;
-
-                case AppSort.CreateDateDesc:
-                    applications = _db.Applications.OrderByDescending(c => c.CreateDate).ToList();
-                    ViewBag.sort = AppSort.CreateDateDesc;
-                    break;
-
-                case AppSort.CodeClientAsc:
-                    applications = _db.Applications.OrderBy(c => c.Client.CodeClient).ToList();
-                    ViewBag.sort = AppSort.CodeClientAsc;
-                    break;
-
-                case AppSort.CodeClientDesc:
-                    applications = _db.Applications.OrderByDescending(c => c.Client.CodeClient).ToList();
-                    ViewBag.sort = AppSort.CodeClientDesc;
-                    break;
-
-                case AppSort.NameClientAsc:
-                    applications = _db.Applications.OrderBy(c => c.Client.Title).ToList();
-                    ViewBag.sort = AppSort.NameClientAsc;
-                    break;
-
-                case AppSort.NameClientDesc:
-                    applications = _db.Applications.OrderByDescending(c => c.Client.Title).ToList();
-                    ViewBag.sort = AppSort.NameClientDesc;
-                    break;
-
-                case AppSort.ArtNumAsc:
-                    applications = _db.Applications.OrderBy(c => c.ArticleNumber).ToList();
-                    ViewBag.sort = AppSort.ArtNumAsc;
-                    break;
-
-                case AppSort.ArtNumDesc:
-                    applications = _db.Applications.OrderByDescending(c => c.ArticleNumber).ToList();
-                    ViewBag.sort = AppSort.ArtNumDesc;
-                    break;
-
-                case AppSort.QuntityAsc:
-                    applications = _db.Applications.OrderBy(c => c.Quantity).ToList();
-                    ViewBag.sort = AppSort.QuntityAsc;
-                    break;
-
-                case AppSort.QuntityDesc:
-                    applications = _db.Applications.OrderByDescending(c => c.Quantity).ToList();
-                    ViewBag.sort = AppSort.QuntityDesc;
-                    break;
-
-                case AppSort.PriceAsc:
-                    applications = _db.Applications.OrderBy(c => c.Price).ToList();
-                    ViewBag.sort = AppSort.PriceAsc;
-                    break;
-                
-                case AppSort.PriceDesc:
-                    applications = _db.Applications.OrderByDescending(c => c.Price).ToList();
-                    ViewBag.sort = AppSort.PriceDesc;
-                    break;
-                
-                case AppSort.AmountAsc:
-                    applications = _db.Applications.OrderBy(c => c.Amount).ToList();
-                    ViewBag.sort = AppSort.AmountAsc;
-                    break;
-                
-                case AppSort.AmountDesc:
-                    applications = _db.Applications.OrderByDescending(c => c.Amount).ToList();
-                    ViewBag.sort = AppSort.AmountDesc;
-                    break;
+                List<Application> applications = new List<Application>();
+                switch (sort)
+                {
+                    case AppSort.NumApplAsc:
+                        applications = _db.Applications.OrderBy(c => c.NumberApplication).ToList();
+                        ViewBag.sort = AppSort.NumApplAsc;
+                        break;
+                    
+                    case AppSort.NumApplDesc:
+                        applications = _db.Applications.OrderByDescending(c => c.NumberApplication).ToList();
+                        ViewBag.sort = AppSort.NumApplDesc;
+                        break;
+    
+                    case AppSort.ManagerAsc:
+                        applications = _db.Applications.OrderBy(c => c.Manager.Surname).ToList();
+                        ViewBag.sort = AppSort.ManagerAsc;
+                        break;
+    
+                    case AppSort.ManagerDesc:
+                        applications = _db.Applications.OrderByDescending(c => c.Manager.Surname).ToList();
+                        ViewBag.sort = AppSort.ManagerDesc;
+                        break;
+    
+                    case AppSort.CreateDateAsc:
+                        applications = _db.Applications.OrderBy(c => c.CreateDate).ToList();
+                        ViewBag.sort = AppSort.CreateDateAsc;
+                        break;
+    
+                    case AppSort.CreateDateDesc:
+                        applications = _db.Applications.OrderByDescending(c => c.CreateDate).ToList();
+                        ViewBag.sort = AppSort.CreateDateDesc;
+                        break;
+    
+                    case AppSort.CodeClientAsc:
+                        applications = _db.Applications.OrderBy(c => c.Client.CodeClient).ToList();
+                        ViewBag.sort = AppSort.CodeClientAsc;
+                        break;
+    
+                    case AppSort.CodeClientDesc:
+                        applications = _db.Applications.OrderByDescending(c => c.Client.CodeClient).ToList();
+                        ViewBag.sort = AppSort.CodeClientDesc;
+                        break;
+    
+                    case AppSort.NameClientAsc:
+                        applications = _db.Applications.OrderBy(c => c.Client.Title).ToList();
+                        ViewBag.sort = AppSort.NameClientAsc;
+                        break;
+    
+                    case AppSort.NameClientDesc:
+                        applications = _db.Applications.OrderByDescending(c => c.Client.Title).ToList();
+                        ViewBag.sort = AppSort.NameClientDesc;
+                        break;
+    
+                    case AppSort.ArtNumAsc:
+                        applications = _db.Applications.OrderBy(c => c.ArticleNumber).ToList();
+                        ViewBag.sort = AppSort.ArtNumAsc;
+                        break;
+    
+                    case AppSort.ArtNumDesc:
+                        applications = _db.Applications.OrderByDescending(c => c.ArticleNumber).ToList();
+                        ViewBag.sort = AppSort.ArtNumDesc;
+                        break;
+    
+                    case AppSort.QuntityAsc:
+                        applications = _db.Applications.OrderBy(c => c.Quantity).ToList();
+                        ViewBag.sort = AppSort.QuntityAsc;
+                        break;
+    
+                    case AppSort.QuntityDesc:
+                        applications = _db.Applications.OrderByDescending(c => c.Quantity).ToList();
+                        ViewBag.sort = AppSort.QuntityDesc;
+                        break;
+    
+                    case AppSort.PriceAsc:
+                        applications = _db.Applications.OrderBy(c => c.Price).ToList();
+                        ViewBag.sort = AppSort.PriceAsc;
+                        break;
+                    
+                    case AppSort.PriceDesc:
+                        applications = _db.Applications.OrderByDescending(c => c.Price).ToList();
+                        ViewBag.sort = AppSort.PriceDesc;
+                        break;
+                    
+                    case AppSort.AmountAsc:
+                        applications = _db.Applications.OrderBy(c => c.Amount).ToList();
+                        ViewBag.sort = AppSort.AmountAsc;
+                        break;
+                    
+                    case AppSort.AmountDesc:
+                        applications = _db.Applications.OrderByDescending(c => c.Amount).ToList();
+                        ViewBag.sort = AppSort.AmountDesc;
+                        break;
+                }
+    
+                if (!String.IsNullOrEmpty(userId))
+                {
+                    applications = applications.Where(a => a.Manager.Id == userId).OrderByDescending(a => a.NumberApplication).ToList();
+                }
+    
+                return applications;
             }
-
-            if (!String.IsNullOrEmpty(userId))
+            catch (Exception e)
             {
-                applications = applications.Where(a => a.Manager.Id == userId).OrderByDescending(a => a.NumberApplication).ToList();
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return null;
             }
-
-            return applications;
         }
 
         /// <summary>
         /// Метод для поиска информации с различными способами поиска
         /// </summary>
         /// <param name="find">искомый параметр</param>
-        /// <returns></returns>
+        /// <returns>возвращает результат поиска список обращений в отсортированном виде</returns>
         [NonAction]
         private List<Application> FindResult(string find)
         {
-            List<Application> applications = new List<Application>();
-            
-            if (!string.IsNullOrEmpty(find))
+            try
             {
-                // жесткий поиск по номеру обращения
-                applications = _db.Applications.Where(a => a.NumberApplication.ToString() == find.Trim()).ToList();
-                
-                // поиск по id менеджера
-                if (applications.Any() == false)
+                List<Application> applications = new List<Application>();
+                            
+                if (!string.IsNullOrEmpty(find))
                 {
-                    applications = _db.Applications.Where(a => a.Manager.Id == find & a.AppState == AppState.Новая).ToList();
-                }
+                    // жесткий поиск по номеру обращения
+                    applications = _db.Applications.Where(a => a.NumberApplication.ToString() == find.Trim()).ToList();
+                    
+                    // поиск по id менеджера
+                    if (applications.Any() == false)
+                    {
+                        applications = _db.Applications.Where(a => a.Manager.Id == find & a.AppState == AppState.Новая).ToList();
+                    }
 
-                // жесткий поиск по фамилии, имени, коду клиента
-                if (applications.Any() == false)
-                {
-                    applications = _db.Applications
-                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Surname.ToLower()))
-                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Name.ToLower()))
-                        .Where(a => find.ToUpper().Trim().Contains(a.Client.CodeClient)).ToList();
-                }
-                
-                // жесткий поиск по фамилии, имени, названию клиента
-                if (applications.Any() == false)
-                {
-                    applications = _db.Applications
-                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Surname.ToLower()))
-                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Name.ToLower()))
-                        .Where(a => find.ToUpper().Trim().Contains(a.Client.Title)).ToList();
-                }
-                
-                // жесткий поиск по фамилии и коду клиента
-                if (applications.Any() == false)
-                {
-                    applications = _db.Applications
-                        .Where(a => find.ToLower().Trim().Contains(a.Manager.Surname.ToLower()))
-                        .Where(a => find.ToUpper().Trim().Contains(a.Client.CodeClient)).ToList();
-                }
+                    // жесткий поиск по фамилии, имени, коду клиента
+                    if (applications.Any() == false)
+                    {
+                        applications = _db.Applications
+                            .Where(a => find.ToLower().Trim().Contains(a.Manager.Surname.ToLower()))
+                            .Where(a => find.ToLower().Trim().Contains(a.Manager.Name.ToLower()))
+                            .Where(a => find.ToUpper().Trim().Contains(a.Client.CodeClient)).ToList();
+                    }
+                    
+                    // жесткий поиск по фамилии, имени, названию клиента
+                    if (applications.Any() == false)
+                    {
+                        applications = _db.Applications
+                            .Where(a => find.ToLower().Trim().Contains(a.Manager.Surname.ToLower()))
+                            .Where(a => find.ToLower().Trim().Contains(a.Manager.Name.ToLower()))
+                            .Where(a => find.ToUpper().Trim().Contains(a.Client.Title)).ToList();
+                    }
+                    
+                    // жесткий поиск по фамилии и коду клиента
+                    if (applications.Any() == false)
+                    {
+                        applications = _db.Applications
+                            .Where(a => find.ToLower().Trim().Contains(a.Manager.Surname.ToLower()))
+                            .Where(a => find.ToUpper().Trim().Contains(a.Client.CodeClient)).ToList();
+                    }
 
-                // 1 способ, мягкий поиск
-                if (applications.Any() == false)
-                {
-                    applications = _db.Applications.Where(a =>
-                        find.ToLower().Contains(a.Manager.Surname.ToLower()) ||
-                        find.ToLower().Contains(a.Manager.Name.ToLower()) ||
-                        find.ToLower().Contains(a.NumberApplication.ToString().ToLower()) ||
-                        find.ToLower().Contains(a.Client.Title.ToLower()) ||
-                        find.ToUpper().Contains(a.Client.CodeClient)).ToList();
-                }
+                    // 1 способ, мягкий поиск
+                    if (applications.Any() == false)
+                    {
+                        applications = _db.Applications.Where(a =>
+                            find.ToLower().Contains(a.Manager.Surname.ToLower()) ||
+                            find.ToLower().Contains(a.Manager.Name.ToLower()) ||
+                            find.ToLower().Contains(a.NumberApplication.ToString().ToLower()) ||
+                            find.ToLower().Contains(a.Client.Title.ToLower()) ||
+                            find.ToUpper().Contains(a.Client.CodeClient)).ToList();
+                    }
 
-                // 2 способ, мягкий поиск
-                if (applications.Any() == false)
-                {
-                    applications = _db.Applications.Where(a => 
-                        a.Manager.Surname.ToLower().Contains(find.ToLower().Trim()) ||
-                        a.Manager.Name.ToLower().Contains(find.ToLower().Trim()) || 
-                        a.NumberApplication.ToString().ToLower().Contains(find.ToLower().Trim()) ||
-                        a.Client.Title.ToLower().Contains(find.ToLower().Trim()) ||
-                        a.Client.CodeClient.Contains(find.ToUpper().Trim())).ToList();
+                    // 2 способ, мягкий поиск
+                    if (applications.Any() == false)
+                    {
+                        applications = _db.Applications.Where(a => 
+                            a.Manager.Surname.ToLower().Contains(find.ToLower().Trim()) ||
+                            a.Manager.Name.ToLower().Contains(find.ToLower().Trim()) || 
+                            a.NumberApplication.ToString().ToLower().Contains(find.ToLower().Trim()) ||
+                            a.Client.Title.ToLower().Contains(find.ToLower().Trim()) ||
+                            a.Client.CodeClient.Contains(find.ToUpper().Trim())).ToList();
+                    }
+
+                    return applications;
                 }
 
                 return applications;
             }
-
-            return applications;
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} | {e.StackTrace}");
+                return null;
+            }
+            
         }
     }
 }

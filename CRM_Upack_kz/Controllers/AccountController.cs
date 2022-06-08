@@ -41,102 +41,183 @@ namespace CRM_Upack_kz.Controllers
             _iLogger = iLogger;
         }
 
+        /// <summary>
+        /// Общая страница всех ползователей
+        /// </summary>
+        /// <returns>возвращает список ползователей</returns>
+        [HttpGet]
+        public IActionResult Index()
+        {
+            try
+            {
+                return View(_db.Users.ToList());
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+        }
         
+        /// <summary>
+        /// Страница предварительной регистрации пользователя
+        /// </summary>
+        /// <returns>возвращает предварительную страницу для добавления нового ползователя</returns>
         [HttpGet]
         public IActionResult Register()
         {
-            return View();
+            try
+            {
+                return View();
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
         
-        
+        /// <summary>
+        /// Экшн для добавления нового пользователя
+        /// </summary>
+        /// <param name="model">контейнер с данными пользователя</param>
+        /// <returns>в случае успешного добавления нового пользователя, админ будет перенаправлен на страницу всех обращений</returns>
         [HttpPost]
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                string path = Path.Combine(_environment.ContentRootPath, "wwwroot/Images/Avatars");
-                string avatarPath = $"/Images/Avatars/defaultavatar.jpg";
-                
-                if (model.File != null)
+                if (ModelState.IsValid)
                 {
-                    avatarPath = $"/Images/Avatars/{model.File.FileName}";
-                    _uploadService.Upload(path, model.File.FileName, model.File);
+                    string path = Path.Combine(_environment.ContentRootPath, "wwwroot/Images/Avatars");
+                    string avatarPath = $"/Images/Avatars/defaultavatar.jpg";
+                    
+                    if (model.File != null)
+                    {
+                        avatarPath = $"/Images/Avatars/{model.File.FileName}";
+                        _uploadService.Upload(path, model.File.FileName, model.File);
+                    }
+                
+                    User user = new User
+                    {
+                        Name = model.Name,
+                        Surname = model.Surname,
+                        Email = model.Email,
+                        PhoneNumber = model.PhoneNumber,
+                        UserName = model.Email,
+                        AvatarPath = avatarPath,
+                        DateOfBirth = model.DateOfBirth,
+                        RoleDisplay = model.Role
+                    };
+                    
+                    var result = await _userManager.CreateAsync(user, model.Password);
+                    if (result.Succeeded)
+                    {
+                        await _userManager.AddToRoleAsync(user, model.Role);
+                        return RedirectToAction("Index", "Applications");
+                    }
+                    
+                    foreach (var error in result.Errors)
+                    {
+                        _nLogger.Warn($"Регистрация пользователя: ошибка при регистрации {user.Surname} {user.Name}");
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                    
                 }
-            
-                User user = new User
-                {
-                    Name = model.Name,
-                    Surname = model.Surname,
-                    Email = model.Email,
-                    PhoneNumber = model.PhoneNumber,
-                    UserName = model.Email,
-                    AvatarPath = avatarPath,
-                    DateOfBirth = model.DateOfBirth,
-                    RoleDisplay = model.Role
-                };
-                
-                var result = await _userManager.CreateAsync(user, model.Password);
-                if (result.Succeeded)
-                {
-                    await _userManager.AddToRoleAsync(user, model.Role);
-                    return RedirectToAction("Index", "Applications");
-                }
-                
-                foreach (var error in result.Errors)
-                {
-                    _nLogger.Warn($"Регистрация пользователя: ошибка при регистрации {user.Surname} {user.Name}");
-                    ModelState.AddModelError(string.Empty, error.Description);
-                }
-                
-            }
 
-            return View(model);
+                return View(model);
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
 
+        /// <summary>
+        /// Экшн для предварительной авторизации пользователями, доступна для всех.
+        /// </summary>
+        /// <returns></returns>
         [AllowAnonymous]
         [HttpGet]
         public IActionResult Login()
         {
-            return View();
+            try
+            {
+                return View();
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
         
+        /// <summary>
+        /// Экшн для авторизации пользователями, доступна для всех.
+        /// </summary>
+        /// <param name="model">контейнер с данными (логин и пароль)</param>
+        /// <returns>в случае успешной авторизации пользователь будет перенаправлен на список всех обращений</returns>
         [AllowAnonymous]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                User user = await _userManager.FindByEmailAsync(model.Email);
-                if (user != null)
+                if (ModelState.IsValid)
                 {
-                    var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, false);
-                    if (result.Succeeded)
+                    User user = await _userManager.FindByEmailAsync(model.Email);
+                    if (user != null)
                     {
-                        return RedirectToAction("Index", "Applications");
+                        var result = await _signInManager.PasswordSignInAsync(user, model.Password, model.RememberMe, false);
+                        if (result.Succeeded)
+                        {
+                            return RedirectToAction("Index", "Applications");
+                        }
                     }
+                    
+                    ModelState.AddModelError("", "Неправильный логин и (или) пароль");
                 }
-                
-                ModelState.AddModelError("", "Неправильный логин и (или) пароль");
+                return View(model);
             }
-            return View(model);
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
 
+        /// <summary>
+        /// Экшн для выхода из системы
+        /// </summary>
+        /// <returns>перенаправляет на страницу для авторизации</returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> LogOff()
         {
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
+            try
+            {
+                await _signInManager.SignOutAsync();
+                return RedirectToAction("Login");
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
 
-        [HttpGet]
-        public IActionResult Index()
-        {
-            return View(_db.Users.ToList());
-        }
-        
-        
+        /// <summary>
+        /// Экшн для предварительного редактирования пользователя
+        /// </summary>
+        /// <param name="userId">искомый id пользователя</param>
+        /// <returns></returns>
         [HttpGet]
         public IActionResult Edit(string userId)
         {
@@ -157,16 +238,21 @@ namespace CRM_Upack_kz.Controllers
                 };
 
                 ViewBag.UserId = user.Id;
-                _nLogger.Info($"Открыта страница редактирования профиля пользователя {user.Surname} {user.Name}");
                 return View(model);
             }
             catch (Exception e)
             {
-                _nLogger.Error($"Внимание, ошибка: {e.Message} => {e.StackTrace}");
-                throw;
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
             }
         }
 
+        /// <summary>
+        /// Экшн для редактирования пользователя
+        /// </summary>
+        /// <param name="model">контейнер с данными пользователя</param>
+        /// <param name="userId">искомый id пользователя</param>
+        /// <returns>в случае успеха, пользователь будет перенаправлен в список пользователей</returns>
         [HttpPost]
         public async Task<IActionResult> Edit(EditUserViewModel model, string userId)
         {
@@ -205,168 +291,262 @@ namespace CRM_Upack_kz.Controllers
             }
             catch (Exception e)
             {
-                _nLogger.Error($"Внимание, ошибка: {e.Message} => {e.StackTrace}");
-                throw;
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
             }
         }
 
+        /// <summary>
+        /// Экшн для детального просмотра информации пользователя
+        /// </summary>
+        /// <param name="userId">искомый id пользователя</param>
+        /// <returns></returns>
         [HttpGet]
         public IActionResult Detail(string userId)
         {
-            if (userId != null)
+            try
             {
-                User user = _userManager.FindByIdAsync(userId).Result;
-                if (user != null)
+                if (userId != null)
                 {
-                    return View(user);
+                    User user = _userManager.FindByIdAsync(userId).Result;
+                    if (user != null)
+                    {
+                        return View(user);
+                    }
+
+                    return Content("Такой пользователь отсутствует");
                 }
 
-                return Content("Такой пользователь отсутствует");
+                return Content("Id пользователя не получен");
             }
-
-            return Content("Id пользователя не получен");
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
 
-
+        /// <summary>
+        /// Экшн по предварительному удалению пользователя
+        /// </summary>
+        /// <param name="userId">искомый id пользователя</param>
+        /// <returns></returns>
         [HttpGet]
         [ActionName("Delete")]
         public IActionResult ConfirmDelete(string userId)
         {
-            if (userId != null)
+            try
             {
-                User user = _userManager.FindByIdAsync(userId).Result;
-                if (user != null)
+                if (userId != null)
                 {
-                    return View(user);
+                    User user = _userManager.FindByIdAsync(userId).Result;
+                    if (user != null)
+                    {
+                        return View(user);
+                    }
                 }
 
+                return NotFound();
             }
-
-            return NotFound();
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
         }
 
-
+        /// <summary>
+        /// Экшн для удаления пользователя
+        /// </summary>
+        /// <param name="userId">искомый id пользователя</param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> Delete(string userId)
         {
-            if (userId != null)
+            try
             {
-                User user = _userManager.FindByIdAsync(userId).Result;
-                if (user != null)
+                if (userId != null)
                 {
-                    _db.Entry(user).State = EntityState.Deleted;
-                    await _db.SaveChangesAsync();
-                    return RedirectToAction("Index");
+                    User user = _userManager.FindByIdAsync(userId).Result;
+                    if (user != null)
+                    {
+                        _db.Entry(user).State = EntityState.Deleted;
+                        await _db.SaveChangesAsync();
+                        return RedirectToAction("Index");
+                    }
+
+                    return Content("Такой пользователь отсутствует");
                 }
 
-                return Content("Такой пользователь отсутствует");
+                return Content("Id пользователя не получен");
             }
-
-            return Content("Id пользователя не получен");
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
 
+        /// <summary>
+        /// Экшн для предварительного изменения пароля администратором пользователю
+        /// </summary>
+        /// <param name="email">искомый email пользователя</param>
+        /// <returns></returns>
         [HttpGet]
         public async Task<IActionResult> ChangePassAdmin(string email)
         {
-            if (!string.IsNullOrEmpty(email))
+            try
             {
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user != null)
+                if (!string.IsNullOrEmpty(email))
                 {
-                    ChangePassAdminViewModel model = new ChangePassAdminViewModel()
+                    var user = await _userManager.FindByEmailAsync(email);
+                    if (user != null)
                     {
-                        Id = user.Id,
-                        Email = email
-                    };
+                        ChangePassAdminViewModel model = new ChangePassAdminViewModel()
+                        {
+                            Id = user.Id,
+                            Email = email
+                        };
 
-                    return View(model);
+                        return View(model);
+                    }
+
+                    return NotFound();
                 }
 
                 return NotFound();
+}
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
             }
-
-            return NotFound();
+            
         }
         
+        /// <summary>
+        /// Экшн для изменения пароля администратором пользователю
+        /// </summary>
+        /// <param name="model">контейнер с паролями</param>
+        /// <returns></returns>
         [HttpPost]
         public async Task<IActionResult> ChangePassAdmin(ChangePassAdminViewModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                User user = await _userManager.FindByIdAsync(model.Id);
-                if (user != null)
+                if (ModelState.IsValid)
                 {
-                    var passwordValidator = HttpContext.RequestServices.GetService(typeof(IPasswordValidator<User>)) as IPasswordValidator<User>;
-                    var passwordHasher = HttpContext.RequestServices.GetService(typeof(IPasswordHasher<User>)) as IPasswordHasher<User>;
-                    var result = await passwordValidator.ValidateAsync(_userManager, user, model.NewPassword);
-                    if (result.Succeeded)
+                    User user = await _userManager.FindByIdAsync(model.Id);
+                    if (user != null)
                     {
-                        user.PasswordHash = passwordHasher.HashPassword(user, model.NewPassword);
-                        await _userManager.UpdateAsync(user);
-                        
-                        return View("SuccessChangePassword");
-                    }
+                        var passwordValidator = HttpContext.RequestServices.GetService(typeof(IPasswordValidator<User>)) as IPasswordValidator<User>;
+                        var passwordHasher = HttpContext.RequestServices.GetService(typeof(IPasswordHasher<User>)) as IPasswordHasher<User>;
+                        var result = await passwordValidator.ValidateAsync(_userManager, user, model.NewPassword);
+                        if (result.Succeeded)
+                        {
+                            user.PasswordHash = passwordHasher.HashPassword(user, model.NewPassword);
+                            await _userManager.UpdateAsync(user);
+                            
+                            return View("SuccessChangePassword");
+                        }
 
-                    foreach (var error in result.Errors)
-                    {
-                        ModelState.AddModelError(string.Empty, error.Description);
-                    }
-                }
-            }
-            
-            return View(model);
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> ChangePassUser(string email)
-        {
-            if (!string.IsNullOrEmpty(email))
-            {
-                var user = await _userManager.FindByEmailAsync(email);
-                if (user != null)
-                {
-                    ChangePassUserViewModel model = new ChangePassUserViewModel()
-                    {
-                        Id = user.Id,
-                        Email = email
-                    };
-
-                    return View(model);
-                }
-
-                return NotFound();
-            }
-
-            return NotFound();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> ChangePassUser(ChangePassUserViewModel model)
-        {
-            if (ModelState.IsValid)
-            {
-                User user = await _userManager.FindByIdAsync(model.Id);
-                if (user != null)
-                {
-                    IdentityResult result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-                    if(result.Succeeded)
-                    {
-                        return View("SuccessChangePassword");
-                    }
-                    else
-                    {
                         foreach (var error in result.Errors)
                         {
                             ModelState.AddModelError(string.Empty, error.Description);
                         }
                     }
                 }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Пользователь не найден");
-                }
+                
+                return View(model);
             }
-            return View(model);
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
+        }
+
+        /// <summary>
+        /// Экшн для предварительного изменения пароля пользователем
+        /// </summary>
+        /// <param name="email">искомый email пользователя</param>
+        /// <returns></returns>
+        [HttpGet]
+        public async Task<IActionResult> ChangePassUser(string email)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(email))
+                {
+                    var user = await _userManager.FindByEmailAsync(email);
+                    if (user != null)
+                    {
+                        ChangePassUserViewModel model = new ChangePassUserViewModel()
+                        {
+                            Id = user.Id,
+                            Email = email
+                        };
+
+                        return View(model);
+                    }
+
+                    return NotFound();
+                }
+
+                return NotFound();
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
+        }
+
+        /// <summary>
+        /// Экшн для изменения пароля пользователем
+        /// </summary>
+        /// <param name="model">искомый email пользователя</param>
+        /// <returns></returns>
+        [HttpPost]
+        public async Task<IActionResult> ChangePassUser(ChangePassUserViewModel model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    User user = await _userManager.FindByIdAsync(model.Id);
+                    if (user != null)
+                    {
+                        IdentityResult result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+                        if(result.Succeeded)
+                        {
+                            return View("SuccessChangePassword");
+                        }
+                        else
+                        {
+                            foreach (var error in result.Errors)
+                            {
+                                ModelState.AddModelError(string.Empty, error.Description);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Пользователь не найден");
+                    }
+                }
+                return View(model);
+            }
+            catch (Exception e)
+            {
+                _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
+                return NotFound();
+            }
+            
         }
 
 
