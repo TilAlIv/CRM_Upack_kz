@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using CRM_Upack_kz.Enums;
 using CRM_Upack_kz.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -32,7 +33,7 @@ namespace CRM_Upack_kz.Jobs
                         string text = null;
                         foreach (var app in db.Applications.ToList())
                         {
-                            if (app.Manager.Id == manager.Id && app.WaitingDate.ToShortDateString() == DateTime.Now.ToShortDateString())
+                            if (app.Manager.Id == manager.Id && app.WaitingDate.ToShortDateString() == DateTime.Now.ToShortDateString() && app.AppState != AppState.Закрыта)
                             {
                                 text += $"№:</span> <b>{app.NumberApplication}</b> &nbsp;" +
                                         $"Вы: <b>{app.Manager.Surname} {app.Manager.Name}</b> &nbsp;" +

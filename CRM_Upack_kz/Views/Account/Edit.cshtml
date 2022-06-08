@@ -71,6 +71,11 @@
 
              <div>
                  <input type="submit" id="edit" class="btn btn-outline-primary shadow-sm" value="Изменить">
+                 @if (User.IsInRole("admin"))
+                 {
+                   <a class="btn btn-outline-danger shadow-sm" asp-controller="Account" asp-action="ChangePassAdmin" asp-route-email="@Model.Email">Изменить пароль</a>  
+                 }
+                 
              </div>
          </form>
      }

@@ -265,7 +265,109 @@ namespace CRM_Upack_kz.Controllers
             return Content("Id пользователя не получен");
         }
 
+        [HttpGet]
+        public async Task<IActionResult> ChangePassAdmin(string email)
+        {
+            if (!string.IsNullOrEmpty(email))
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    ChangePassAdminViewModel model = new ChangePassAdminViewModel()
+                    {
+                        Id = user.Id,
+                        Email = email
+                    };
 
+                    return View(model);
+                }
+
+                return NotFound();
+            }
+
+            return NotFound();
+        }
+        
+        [HttpPost]
+        public async Task<IActionResult> ChangePassAdmin(ChangePassAdminViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                User user = await _userManager.FindByIdAsync(model.Id);
+                if (user != null)
+                {
+                    var passwordValidator = HttpContext.RequestServices.GetService(typeof(IPasswordValidator<User>)) as IPasswordValidator<User>;
+                    var passwordHasher = HttpContext.RequestServices.GetService(typeof(IPasswordHasher<User>)) as IPasswordHasher<User>;
+                    var result = await passwordValidator.ValidateAsync(_userManager, user, model.NewPassword);
+                    if (result.Succeeded)
+                    {
+                        user.PasswordHash = passwordHasher.HashPassword(user, model.NewPassword);
+                        await _userManager.UpdateAsync(user);
+                        
+                        return View("SuccessChangePassword");
+                    }
+
+                    foreach (var error in result.Errors)
+                    {
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
+            }
+            
+            return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ChangePassUser(string email)
+        {
+            if (!string.IsNullOrEmpty(email))
+            {
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    ChangePassUserViewModel model = new ChangePassUserViewModel()
+                    {
+                        Id = user.Id,
+                        Email = email
+                    };
+
+                    return View(model);
+                }
+
+                return NotFound();
+            }
+
+            return NotFound();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ChangePassUser(ChangePassUserViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                User user = await _userManager.FindByIdAsync(model.Id);
+                if (user != null)
+                {
+                    IdentityResult result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
+                    if(result.Succeeded)
+                    {
+                        return View("SuccessChangePassword");
+                    }
+                    else
+                    {
+                        foreach (var error in result.Errors)
+                        {
+                            ModelState.AddModelError(string.Empty, error.Description);
+                        }
+                    }
+                }
+                else
+                {
+                    ModelState.AddModelError(string.Empty, "Пользователь не найден");
+                }
+            }
+            return View(model);
+        }
 
 
 

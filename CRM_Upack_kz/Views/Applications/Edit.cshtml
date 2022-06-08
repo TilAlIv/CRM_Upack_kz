@@ -62,8 +62,7 @@ else
             },
             success : function (data){
                 if (data === "Клиент не найден, заполните клиента") {
-                   $('#nameClient').val('');
-                   $('#nameClient').attr('placeholder', data); 
+                   
                 }
                 else {
                     $('#nameClient').val(data); 
