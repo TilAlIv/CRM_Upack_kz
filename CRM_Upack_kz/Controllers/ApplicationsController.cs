@@ -106,7 +106,7 @@ namespace CRM_Upack_kz.Controllers
                     User manager = await _userManager.FindByEmailAsync(User.Identity.Name);
                     if (manager != null)
                     {
-                        Client client = _db.Clients.FirstOrDefault(c => c.CodeClient.ToUpper() == model.CodeClient.ToUpper() || c.Title == model.NameClient.Trim());
+                        Client client = _db.Clients.FirstOrDefault(c => c.CodeClient.ToUpper() == model.CodeClient.ToUpper());
                         CheckClient(manager, client, model); 
                         return RedirectToAction("Index");
                     }
@@ -176,7 +176,7 @@ namespace CRM_Upack_kz.Controllers
                     Application appl = _db.Applications.FirstOrDefault(ap => ap.Id == applId);
                     if (appl != null)
                     {
-                        Client client = await _db.Clients.FirstOrDefaultAsync(c => c.CodeClient.ToUpper() == model.CodeClient.ToUpper() || c.Title == model.NameClient.Trim());
+                        Client client = await _db.Clients.FirstOrDefaultAsync(c => c.CodeClient.ToUpper() == model.CodeClient.ToUpper());
                         if (client != null)
                         {
                             UpdateApplication(appl, client, model);

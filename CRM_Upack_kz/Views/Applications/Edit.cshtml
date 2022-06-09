@@ -62,10 +62,11 @@ else
             },
             success : function (data){
                 if (data === "Клиент не найден, заполните клиента") {
-                   
+                   $('#nameClient').attr('disabled', false);
                 }
                 else {
                     $('#nameClient').val(data); 
+                    $('#nameClient').attr('disabled', true);
                 }
             }
         });
