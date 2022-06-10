@@ -25,8 +25,8 @@
 
 @if (User.Identity.Name == Model.Email)
 {
-  <a class="btn btn-outline-secondary" asp-controller="Account" asp-action="Edit" asp-route-userId="@Model.Id">Редактировать профиль</a>
-  <a class="btn btn-outline-danger" asp-controller="Account" asp-action="ChangePassUser" asp-route-email="@Model.Email">Изменить пароль</a>
+  <a class="baseElement btn btn-outline-secondary" asp-controller="Account" asp-action="Edit" asp-route-userId="@Model.Id">Редактировать профиль</a>
+  <a class="baseElement btn btn-outline-danger" asp-controller="Account" asp-action="ChangePassUser" asp-route-email="@Model.Email">Изменить пароль</a>
 }
 
 @section Scripts
