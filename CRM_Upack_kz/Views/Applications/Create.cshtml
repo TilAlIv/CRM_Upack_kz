@@ -38,10 +38,12 @@
             success : function (data){
                 if (data === "Клиент не найден, заполните клиента") {
                    $('#nameClient').val('');
-                   $('#nameClient').attr('placeholder', data); 
+                   $('#nameClient').attr('placeholder', data);
+                   $('#nameClient').attr('disabled', false);
                 }
                 else {
                     $('#nameClient').val(data); 
+                    $('#nameClient').attr('disabled', true);
                 }
             }
         });
