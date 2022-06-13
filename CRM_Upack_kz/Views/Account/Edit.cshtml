@@ -14,6 +14,7 @@
          </div>
 
          <form asp-action="Edit" asp-controller="Account" method="post" asp-route-userId="@ViewBag.UserId" enctype="multipart/form-data">
+             <input hidden asp-for="AvatarPath" value="@Model.AvatarPath">
              <div class="text-danger" asp-validation-summary="ModelOnly"></div>
              <div class="form-group mb-3">
                  <label asp-for="Name"></label>
@@ -73,9 +74,9 @@
                  <input type="submit" id="edit" class="btn btn-outline-primary shadow-sm" value="Изменить">
                  @if (User.IsInRole("admin"))
                  {
-                   <a class="baseElement btn btn-outline-danger shadow-sm" asp-controller="Account" asp-action="ChangePassAdmin" asp-route-email="@Model.Email">Изменить пароль</a>  
+                     <a class="baseElement btn btn-outline-danger shadow-sm" asp-controller="Account" asp-action="ChangePassAdmin" asp-route-email="@Model.Email">Изменить пароль</a>
                  }
-                 
+
              </div>
          </form>
      }

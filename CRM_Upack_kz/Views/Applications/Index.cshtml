@@ -220,7 +220,7 @@
     }
     
     function checkWaiteDate(applId, date, dateWaite, timeWaite, comment, state){
-      $('#date').val(dateWaite.substring(6,10) + "-" + dateWaite.substring(3,5) + "-" + dateWaite.substring(0,2) + "T" + "23:00");
+      $('#date').val(dateWaite.substring(6,10) + "/" + dateWaite.substring(3,5) + "/" + dateWaite.substring(0,2) + "T" + "23:00");
       $('#message-text').val(comment);
       $('#sendId').val(applId);
       $('#applState').val(state);
@@ -230,10 +230,10 @@
     }
     
     function setDates(date){
-      let start = date.substring(6,10) + "." + date.substring(3,5) + "." + date.substring(0,2);
+      let start = date.substring(6,10) + "/" + date.substring(3,5) + "/" + date.substring(0,2);
       startDate = new Date(start);
       let year = startDate.getFullYear() + 1;
-      let end = year + "." + date.substring(3,5) + "." + date.substring(0,2);
+      let end = year + "/" + date.substring(3,5) + "/" + date.substring(0,2);
       endDate = new Date(end);
     }
        
