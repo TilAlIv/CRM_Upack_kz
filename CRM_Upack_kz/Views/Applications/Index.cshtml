@@ -73,7 +73,7 @@
                   {
                     if (User.IsInRole("admin") || User.IsInRole("merch"))
                     {
-                      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
+                      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate', '@appl.AppState')">Ответить</button>
                     }
                     if (User.IsInRole("admin") || User.Identity.Name == appl.Manager.Email)
                     {
@@ -233,6 +233,7 @@
     }
     
     function setDates(date){
+      
       let start = date.substring(6,10) + "-" + date.substring(3,5) + "-" + date.substring(0,2);
       startDate = new Date(start);
       let year = startDate.getFullYear() + 1;
