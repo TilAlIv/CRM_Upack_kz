@@ -73,7 +73,7 @@
                   {
                     if (User.IsInRole("admin") || User.IsInRole("merch"))
                     {
-                      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate', '@appl.AppState')">Ответить</button>
+                      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.Year', '@appl.CreateDate.Month', '@appl.CreateDate.Day', '@appl.AppState')">Ответить</button>
                     }
                     if (User.IsInRole("admin") || User.Identity.Name == appl.Manager.Email)
                     {
@@ -86,7 +86,7 @@
                   {
                     if (User.IsInRole("admin") || User.IsInRole("merch"))
                     {
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
+                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.Year', '@appl.CreateDate.Month', '@appl.CreateDate.Day', '@appl.WaitingDate.Year', '@appl.WaitingDate.Month', '@appl.WaitingDate.Day', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
                       @if (User.IsInRole("admin"))
                       {
                         <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
@@ -97,8 +97,8 @@
 
                   else if (appl.AppState == AppState.Закрыта & User.IsInRole("admin"))
                   {
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.Year', '@appl.CreateDate.Month', '@appl.CreateDate.Day', '@appl.AppState')">Ответить</button>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.Year', '@appl.CreateDate.Month', '@appl.CreateDate.Day', '@appl.WaitingDate.Year', '@appl.WaitingDate.Month', '@appl.WaitingDate.Day', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
                     <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
                     <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
                   }
@@ -212,33 +212,39 @@
         }
     }
     
-    function check(applId, date, state){
+    function check(applId, year, month, day, state){
       $('#date, #dateWaite').val('').removeClass("text-danger is-invalid text-success is-valid");
       $('#sendProduct').attr("hidden", true);
       $('#message-text').val('');
       $('#sendId').val(applId);
       $('#applState').val(state);
       _state = state;
-      setDates(date);
+      setDates(year, month, day);
     }
     
-    function checkWaiteDate(applId, date, dateWaite, timeWaite, comment, state){
-      $('#date').val(dateWaite.substring(6,10) + "-" + dateWaite.substring(3,5) + "-" + dateWaite.substring(0,2) + "T" + "23:00");
+    function checkWaiteDate(applId, year, month, day, dWYear, dWMonth, dWDay,timeWaite, comment, state){
+      $('#date').val(dWYear + "-" + checkNum(dWMonth) + "-" + checkNum(dWDay) + "T" + "23:00");
       $('#message-text').val(comment);
       $('#sendId').val(applId);
       $('#applState').val(state);
       _state = state;
-      setDates(date);
+      setDates(year, month, day);
       ValidationDate();
     }
     
-    function setDates(date){
-      
-      let start = date.substring(6,10) + "-" + date.substring(3,5) + "-" + date.substring(0,2);
-      startDate = new Date(start);
-      let year = startDate.getFullYear() + 1;
-      let end = year + "-" + date.substring(3,5) + "-" + date.substring(0,2);
-      endDate = new Date(end);
+    function setDates(year, month, day){
+      if (month !== 0){
+        month = month - 1;
+      }
+      startDate = new Date(year, month, day);
+      endDate = new Date(startDate.getFullYear() + 1, month, day);
+    }
+    
+    function checkNum(num){
+      if (num < 10){
+        num = "0" + num;
+      }
+      return num.toString();
     }
        
     

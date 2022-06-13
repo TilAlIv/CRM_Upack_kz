@@ -19,7 +19,7 @@
 </div>
 <div class="form-group mb-3">
     <label asp-for="DateOfBirth"></label>
-    <input id="birth" class="form-control shadow-sm" asp-for="DateOfBirth" value="@Model.DateOfBirth">
+    <input id="birth" min="1945-01-01" max="2002-12-31" class="form-control shadow-sm" asp-for="DateOfBirth" value="@Model.DateOfBirth">
     <small><span asp-validation-for="DateOfBirth" class="text-danger"></span></small>
 </div>
 <div class="form-group mb-3">

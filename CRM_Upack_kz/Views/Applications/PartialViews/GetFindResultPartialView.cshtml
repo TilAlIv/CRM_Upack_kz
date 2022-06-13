@@ -63,28 +63,28 @@ else
               @if (appl.AppState == AppState.Новая & (User.Identity.Name == appl.Manager.Email || User.IsInRole("admin") || User.IsInRole("merch")))
                 {
                   if (User.IsInRole("admin") || User.IsInRole("merch"))
-                  {
-                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.AppState')">Ответить</button>
-                  }
-                  if (User.IsInRole("admin") || User.Identity.Name == appl.Manager.Email)
-                  {
-                    <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
-                    <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
-                  }
-                }
-
-                else if (appl.AppState == AppState.Ожидается & (User.Identity.Name == appl.Manager.Email || User.IsInRole("admin") || User.IsInRole("merch")))
-                {
-                  if (User.IsInRole("admin") || User.IsInRole("merch"))
-                  {
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.ToShortDateString()', '@appl.WaitingDate.ToShortDateString()', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
-                    @if (User.IsInRole("admin"))
+                    {
+                      <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Ответить" onclick="check('@appl.Id', '@appl.CreateDate.Year', '@appl.CreateDate.Month', '@appl.CreateDate.Day', '@appl.AppState')">Ответить</button>
+                    }
+                    if (User.IsInRole("admin") || User.Identity.Name == appl.Manager.Email)
                     {
                       <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
                       <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
                     }
                   }
-                }
+
+                  else if (appl.AppState == AppState.Ожидается & (User.Identity.Name == appl.Manager.Email || User.IsInRole("admin") || User.IsInRole("merch")))
+                  {
+                    if (User.IsInRole("admin") || User.IsInRole("merch"))
+                    {
+                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#calendar" data-bs-whatever="@appl.Id" title="Проверить" onclick="checkWaiteDate('@appl.Id', '@appl.CreateDate.Year', '@appl.CreateDate.Month', '@appl.CreateDate.Day', '@appl.WaitingDate.Year', '@appl.WaitingDate.Month', '@appl.WaitingDate.Day', '@appl.WaitingDate.ToShortTimeString()', '@appl.Comment', '@appl.AppState')">Проверить</button>
+                      @if (User.IsInRole("admin"))
+                      {
+                        <a class="btn btn-sm btn-warning pt-2" title="Редактировать" asp-route-id="@appl.Id" asp-action="Edit" asp-controller="Applications"><i class="bi bi-pencil-square"></i></a>
+                        <a class="btn btn-sm btn-danger pt-2" title="Удалить" asp-route-id="@appl.Id" asp-action="ConfirmDelete" asp-controller="Applications"><i class="bi bi-trash"></i></a>
+                      }
+                    }
+                  }
 
                 else if (appl.AppState == AppState.Закрыта & User.IsInRole("admin"))
                 {
@@ -105,4 +105,94 @@ else
     }
     </tbody>
   </table>
+}
+
+@section Scripts
+{
+  <script >
+    $(document).ready(function () {
+        $('#caption').text("Список обращений");
+        $('#applications').addClass("active");
+        $('#users').removeClass("active");
+    });
+    
+    let startDate = new Date();
+    let endDate = new Date();
+    let dateWaite = new Date();
+    let _state = '';
+    
+    function ValidationDate(){
+        
+        dateWaite = new Date($('#date').val().substring(0,10));
+        console.log(startDate);
+        console.log(endDate);
+        console.log(dateWaite);
+                       
+        if (startDate <= dateWaite && dateWaite <= endDate)
+        {
+          if (_state === 'Новая')
+          {
+            $('#sendCalendar').attr("hidden", false);
+            $('#sendProduct').attr("hidden", true);
+          }
+          else if (_state === 'Ожидается')
+          {
+            $('#sendCalendar').attr("hidden", true);
+            $('#sendProduct').attr("hidden", false); 
+          }
+          
+          $('#date, #dateWaite').removeClass("text-danger is-invalid");
+          $('#date, #dateWaite').addClass("text-success is-valid");
+            
+            return true;
+        }
+        else 
+        {
+          alert('Выберите крректную дату');
+          $('#sendCalendar').attr("hidden", true);
+          $('#sendProduct').attr("hidden", true);
+          $('#date, #dateWaite').val('').addClass("text-danger is-invalid");
+          $('#date, #dateWaite').removeClass("text-success is-valid");
+          
+          return false;
+        }
+    }
+    
+    function check(applId, year, month, day, state){
+      $('#date, #dateWaite').val('').removeClass("text-danger is-invalid text-success is-valid");
+      $('#sendProduct').attr("hidden", true);
+      $('#message-text').val('');
+      $('#sendId').val(applId);
+      $('#applState').val(state);
+      _state = state;
+      setDates(year, month, day);
+    }
+    
+    function checkWaiteDate(applId, year, month, day, dWYear, dWMonth, dWDay,timeWaite, comment, state){
+      $('#date').val(dWYear + "-" + checkNum(dWMonth) + "-" + checkNum(dWDay) + "T" + "23:00");
+      $('#message-text').val(comment);
+      $('#sendId').val(applId);
+      $('#applState').val(state);
+      _state = state;
+      setDates(year, month, day);
+      ValidationDate();
+    }
+    
+    function setDates(year, month, day){
+      if (month !== 0){
+        month = month - 1;
+      }
+      startDate = new Date(year, month, day);
+      endDate = new Date(startDate.getFullYear() + 1, month, day);
+    }
+    
+    function checkNum(num){
+      if (num < 10){
+        num = "0" + num;
+      }
+      return num.toString();
+    }
+       
+    
+ </script>
 }
