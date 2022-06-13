@@ -21,8 +21,5 @@
         <PackageReference Include="X.PagedList.Mvc.Bootstrap4" Version="8.0.7.1" />
         <PackageReference Include="X.PagedList.Mvc.Core" Version="8.0.7" />
     </ItemGroup>
-    <ItemGroup>
-      <Folder Include="wwwroot\Files" />
-    </ItemGroup>
 
 </Project>

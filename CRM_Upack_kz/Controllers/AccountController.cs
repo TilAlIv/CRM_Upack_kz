@@ -234,7 +234,6 @@ namespace CRM_Upack_kz.Controllers
                     DateOfBirth = user.DateOfBirth,
                     AvatarPath = user.AvatarPath,
                     Role = user.RoleDisplay
-
                 };
 
                 ViewBag.UserId = user.Id;
@@ -260,7 +259,7 @@ namespace CRM_Upack_kz.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    string path = Path.Combine(_environment.ContentRootPath, "wwwroot/Images/Avatars");
+                    string path = Path.Combine(_environment.ContentRootPath, "/Images/Avatars");
 
                     User user = _userManager.FindByIdAsync(userId).Result;
                     user.Name = model.Name;
@@ -546,13 +545,6 @@ namespace CRM_Upack_kz.Controllers
                 _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
                 return NotFound();
             }
-            
         }
-
-
-
-
-
-
     }
 }
