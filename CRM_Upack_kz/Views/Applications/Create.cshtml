@@ -21,11 +21,12 @@
 
 @section Scripts
 {
-  <script >
+    <script >
     $(document).ready(function () {
         $('#caption').text("Добавьте новое обращение");
     });
     
+        
     function GetInfoClientAjax(){
         var codeClient = $('#codeClient').val();
                 
@@ -40,10 +41,12 @@
                    $('#nameClient').val('');
                    $('#nameClient').attr('placeholder', data);
                    $('#nameClient').attr('disabled', false);
+                   $('#hiddenClient').val('');
                 }
                 else {
                     $('#nameClient').val(data); 
                     $('#nameClient').attr('disabled', true);
+                    $('#hiddenClient').val(data);
                 }
             }
         });

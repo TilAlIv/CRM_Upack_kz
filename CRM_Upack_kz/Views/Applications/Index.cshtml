@@ -178,10 +178,7 @@
     function ValidationDate(){
         
         dateWaite = new Date($('#date').val().substring(0,10));
-        console.log(startDate);
-        console.log(endDate);
-        console.log(dateWaite);
-                       
+                               
         if (startDate <= dateWaite && dateWaite <= endDate)
         {
           if (_state === 'Новая')

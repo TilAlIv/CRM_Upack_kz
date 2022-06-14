@@ -9,6 +9,7 @@
 <div class="form-group mb-3">
     <label asp-for="NameClient"></label>
     <input id="nameClient" class="form-control shadow-sm" placeholder="" asp-for="NameClient" value="@Model.NameClient">
+    <input id="hiddenClient" hidden placeholder="" asp-for="NameClient">
     <small><span asp-validation-for="NameClient" class="text-danger"></span></small>
 </div>
 <div class="form-group mb-3">
