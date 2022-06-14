@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using CRM_Upack_kz.Validation;
 using Microsoft.AspNetCore.Http;
 
 namespace CRM_Upack_kz.ViewModels
@@ -18,6 +19,7 @@ namespace CRM_Upack_kz.ViewModels
 
         [Required(ErrorMessage = "Это поле обязательно для заполнения")]
         [Display(Name = "Дата рождения")]
+        [AgeValidation]
         public DateTime DateOfBirth { get; set; }
 
         [Required(ErrorMessage = "Это поле обязательно для заполнения")]

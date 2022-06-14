@@ -1,6 +1,4 @@
-﻿@using CRM_Upack_kz.ViewModels
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@model CRM_Upack_kz.ViewModels.RegisterViewModel
+﻿@model CRM_Upack_kz.ViewModels.RegisterViewModel
 
 @{
     ViewBag.Title = "Регистрация";
@@ -12,7 +10,7 @@
     <h2>Регистрация пользователя</h2>
     <form asp-action="Register" asp-controller="Account" method="post" enctype="multipart/form-data">
         @{ 
-            Html.RenderPartial("PartialViews/UserFormPartial", new RegisterViewModel());
+            Html.RenderPartial("PartialViews/UserFormPartial", Model);
         }
         <div>
             <input type="submit" id="register" class="btn btn-outline-primary" value="Регистрация">

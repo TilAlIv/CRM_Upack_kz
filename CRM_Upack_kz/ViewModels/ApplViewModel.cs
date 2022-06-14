@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using CRM_Upack_kz.Validation;
 
 namespace CRM_Upack_kz.ViewModels
 {
@@ -26,16 +28,21 @@ namespace CRM_Upack_kz.ViewModels
         public string ArticleNumber { get; set; }
         
         [Required(ErrorMessage = "Это поле обязательно")]
+        [Range(Int32.MinValue, Int32.MaxValue)]
+        
         [Display(Name = "Количество")]
+        [ValueValidationInt]
         public int Quantity { get; set; }
         
-        [Required(ErrorMessage = "Это поле обязательно")]
         [Display(Name = "Цена за единицу")]
+        [ValueValidationDouble]
         public double Price { get; set; }
         
         [MaxLength(250, ErrorMessage = "Укажите меньше 10 символов")]
         [MinLength(3, ErrorMessage = "Укажите больше 3 символов")]
         [Display(Name = "Добавьте комментарии")]
         public string Comment { get; set; }
+
+        
     }
 }

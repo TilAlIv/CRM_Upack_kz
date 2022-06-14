@@ -1,10 +1,9 @@
 ﻿@model CRM_Upack_kz.ViewModels.EditUserViewModel
 
 @{
-    //string date = Model.DateOfBirth.ToShortDateString().Substring(6,4) + "-" + Model.DateOfBirth.ToShortDateString().Substring(3,2) + "-" + Model.DateOfBirth.ToShortDateString().Substring(0,2);
     Layout = "_Layout";
 }
-<p>Hello World</p>
+
 <div id="BaseBody" class="text-center col col-sm-3 col-md-4 col-lg-12"></div>
 <div class="baseElement col-md-4 pt-3 pb-4 ">
      @if (User.Identity.Name == Model.Email || User.IsInRole("admin"))
@@ -33,11 +32,11 @@
                  <small><span asp-validation-for="Email" class="text-danger"></span></small>
              </div>
 
-             @*<div class="form-group mb-3">
+             <div class="form-group mb-3">
                  <label asp-for="DateOfBirth"></label>
-                 <input id="birth" type="date" class="form-control shadow-sm" asp-for="DateOfBirth" value="@date">
+                 <input id="birth" type="date" class="form-control shadow-sm" asp-for="DateOfBirth" value="@ViewBag.BirthDay">
                  <small><span asp-validation-for="DateOfBirth" class="text-danger"></span></small>
-             </div>*@
+             </div>
 
              <div class="form-group mb-3">
                  <label asp-for="PhoneNumber"></label>

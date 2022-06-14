@@ -1,5 +1,4 @@
-﻿@using CRM_Upack_kz.ViewModels
-@model CRM_Upack_kz.ViewModels.ApplViewModel
+﻿@model CRM_Upack_kz.ViewModels.ApplViewModel
 
 @{
     Layout = "_Layout";
@@ -9,7 +8,7 @@
     <h4>Заполните поля</h4>
     <form asp-action="Create" asp-controller="Applications" method="post" enctype="multipart/form-data">
         @{
-            Html.RenderPartial("PartialViews/ApplicationFormPartial", new ApplViewModel());
+            Html.RenderPartial("PartialViews/ApplicationFormPartial", @Model);
         }
         <div>
             <input type="submit" id="edit" class="btn btn-outline-primary shadow-sm" value="Создать">

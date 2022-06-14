@@ -68,7 +68,7 @@ namespace CRM_Upack_kz.Controllers
         {
             try
             {
-                return View();
+                return View(new RegisterViewModel());
             }
             catch (Exception e)
             {
@@ -237,6 +237,7 @@ namespace CRM_Upack_kz.Controllers
                 };
 
                 ViewBag.UserId = user.Id;
+                ViewBag.BirthDay = BirthDate(user.DateOfBirth);
                 return View(model);
             }
             catch (Exception e)
@@ -545,6 +546,23 @@ namespace CRM_Upack_kz.Controllers
                 _nLogger.Error($"Внимание ошибка: {e.Message} => {e.StackTrace}");
                 return NotFound();
             }
+        }
+
+        [NonAction]
+        private string BirthDate(DateTime date)
+        {
+            return $"{date.Year}-{CheckNum(date.Month)}-{CheckNum(date.Day)}";
+        }
+
+        [NonAction]
+        private string CheckNum(int num)
+        {
+            if (num < 10)
+            {
+                return "0" + 1;
+            }
+
+            return num.ToString();
         }
     }
 }
