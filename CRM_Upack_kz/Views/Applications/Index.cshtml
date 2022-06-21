@@ -135,7 +135,7 @@
             <form asp-controller="Applications" asp-action="ChangeDateWaite" method="post">
               <div class="mb-3">
                 <label id="dateWaite" for="date" class="col-form-label">Дата ожидания:</label>
-                <input type="datetime-local" class="form-control" name="date" id="date" onchange="ValidationDate()">
+                <input type="date" class="form-control" name="date" id="date" onchange="ValidationDate()">
                 <input type="text" name="applId" value="" id="sendId" hidden="true">
                 <input type="text" name="state" value="" id="applState" hidden="true">
                 
@@ -148,9 +148,9 @@
               </div>
               @if (User.IsInRole("admin") || User.IsInRole("merch"))
               {
-                <input id="sendProduct" type="submit" class="btn btn-primary" hidden="true" value="Товар поступил">
+                <input id="sendProduct" type="submit" class="btn btn-primary" value="Товар поступил">
               }
-              <input id="sendCalendar" type="submit" class="btn btn-primary" hidden="true" value="сохранить">
+              <input id="sendCalendar" type="submit" class="btn btn-primary" value="Сохранить" disabled>
             </form>
           </div>
         </div>
@@ -178,31 +178,32 @@
     function ValidationDate(){
         
         dateWaite = new Date($('#date').val().substring(0,10));
+        
                                
         if (startDate <= dateWaite && dateWaite <= endDate)
         {
           if (_state === 'Новая')
           {
-            $('#sendCalendar').attr("hidden", false);
+            $('#sendCalendar').attr("hidden", false).removeAttr('disabled');
             $('#sendProduct').attr("hidden", true);
           }
           else if (_state === 'Ожидается')
           {
             $('#sendCalendar').attr("hidden", true);
-            $('#sendProduct').attr("hidden", false); 
+            $('#sendProduct').attr("hidden", false).removeAttr('disabled'); 
           }
           
           $('#date, #dateWaite').removeClass("text-danger is-invalid");
           $('#date, #dateWaite').addClass("text-success is-valid");
             
-            return true;
+          return true;
         }
         else 
         {
-          alert('Выберите крректную дату');
-          $('#sendCalendar').attr("hidden", true);
-          $('#sendProduct').attr("hidden", true);
-          $('#date, #dateWaite').val('').addClass("text-danger is-invalid");
+          $('#sendCalendar').attr('disabled', true);
+          $('#sendProduct').attr("disabled", true);
+          
+          $('#date, #dateWaite').addClass("text-danger is-invalid");
           $('#date, #dateWaite').removeClass("text-success is-valid");
           
           return false;
@@ -210,8 +211,10 @@
     }
     
     function check(applId, year, month, day, state){
-      $('#date, #dateWaite').val('').removeClass("text-danger is-invalid text-success is-valid");
+      $('#sendCalendar').attr('disabled', true).attr('hidden', false);
       $('#sendProduct').attr("hidden", true);
+      
+      $('#date, #dateWaite').val('').removeClass("text-danger is-invalid text-success is-valid");
       $('#message-text').val('');
       $('#sendId').val(applId);
       $('#applState').val(state);
@@ -220,7 +223,10 @@
     }
     
     function checkWaiteDate(applId, year, month, day, dWYear, dWMonth, dWDay,timeWaite, comment, state){
-      $('#date').val(dWYear + "-" + checkNum(dWMonth) + "-" + checkNum(dWDay) + "T" + "23:00");
+      $('#sendCalendar').attr('hidden', true);
+      $('#sendProduct').attr('disabled', true).attr('hidden', false);
+      
+      $('#date').val(dWYear + "-" + checkNum(dWMonth) + "-" + checkNum(dWDay));
       $('#message-text').val(comment);
       $('#sendId').val(applId);
       $('#applState').val(state);
